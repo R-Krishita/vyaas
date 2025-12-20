@@ -1,0 +1,81 @@
+# Environment Variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.*.local
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+*.cover
+.coverage
+htmlcov/
+
+# Node.js & npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+package-lock.json
+
+# Expo & React Native
+.expo/
+.expo-shared/
+dist/
+web-build/
+
+# Build outputs
+build/
+*.egg-info/
+dist/
+*.egg
+
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Config files that might contain secrets
+config.local.*
+secrets.json
+credentials.json
+
+# SSL/TLS certificates
+*.pem
+*.key
+*.cert
+*.crt
+
+# JWT/API Keys
+jwt_secret.txt
+api_keys.txt
