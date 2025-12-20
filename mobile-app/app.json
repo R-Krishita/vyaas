@@ -1,0 +1,32 @@
+{
+    "expo": {
+        "name": "Smart Ayurvedic Crop Advisor",
+        "slug": "smart-ayurvedic-crop-advisor",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "icon": "./assets/icon.png",
+        "userInterfaceStyle": "light",
+        "splash": {
+            "image": "./assets/splash.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#FFF8E1"
+        },
+        "assetBundlePatterns": [
+            "**/*"
+        ],
+        "ios": {
+            "supportsTablet": true,
+            "bundleIdentifier": "com.smartayurvediccropadvisor"
+        },
+        "android": {
+            "adaptiveIcon": {
+                "foregroundImage": "./assets/adaptive-icon.png",
+                "backgroundColor": "#2E7D32"
+            },
+            "package": "com.smartayurvediccropadvisor"
+        },
+        "web": {
+            "favicon": "./assets/favicon.png"
+        }
+    }
+}
