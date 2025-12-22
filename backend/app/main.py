@@ -133,11 +133,17 @@ class ChatbotRequest(BaseModel):
 
 @app.post("/api/chatbot/ask")
 async def chatbot_ask(request: ChatbotRequest):
-    """Chatbot endpoint (placeholder - connect LLM later)."""
-    return {
-        "reply": "I'm your Ayurvedic crop assistant! This is a placeholder response. Connect an LLM API for real answers.",
-        "quick_replies": ["Pest help", "Watering tips", "Market prices"]
-    }
+    """Chatbot endpoint with Gemini AI integration."""
+    from app.services.chatbot_service import get_chatbot_service
+    
+    chatbot_service = get_chatbot_service()
+    response = chatbot_service.get_response(
+        user_message=request.message,
+        farmer_id=request.farmer_id,
+        context=request.context
+    )
+    
+    return response
 
 
 if __name__ == "__main__":
