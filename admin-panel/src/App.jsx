@@ -6,6 +6,7 @@ import { Routes, Route, NavLink } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import CropsDatabase from './pages/CropsDatabase';
 import FarmerRecords from './pages/FarmerRecords';
+import Chatbot from './components/Chatbot';
 
 const Sidebar = () => (
   <aside className="sidebar">
@@ -46,6 +47,7 @@ function App() {
           <Route path="/farmers" element={<FarmerRecords />} />
         </Routes>
       </main>
+      <Chatbot />
     </div>
   );
 }

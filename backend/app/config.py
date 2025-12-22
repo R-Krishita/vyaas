@@ -1,22 +1,23 @@
 # app/config.py
 # Configuration settings for the Smart Ayurvedic Crop Advisor backend
 
-from pydantic_settings import BaseSettings
-from functools import lru_cache
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from dotenv import load_dotenv
+import os
 
+# Load .env file
+load_dotenv()
 
 class Settings(BaseSettings):
-    """Application settings loaded from environment variables."""
-    
     # API Keys
-    data_gov_api_key: str = ""
-    
+    data_gov_api_key: str
+    openai_api_key: str
+
     # data.gov.in Mandi API endpoints
-    # Resource ID for daily commodity prices
     mandi_resource_id: str = "9ef84268-d588-465a-a308-a864a43d0070"
     data_gov_base_url: str = "https://api.data.gov.in/resource"
-    
-    # Ayurvedic crops we support (matching data.gov.in commodity names)
+
+    # Ayurvedic crops we support
     supported_crops: list = [
         "Turmeric",
         "Ginger", 
@@ -31,13 +32,25 @@ class Settings(BaseSettings):
         "Safed Musli",
         "Isabgol"
     ]
-    
-    class Config:
-        env_file = ".env"
-        extra = "allow"
+
+    # ✅ SINGLE, CORRECT model_config
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,   # 🔥 THIS IS THE KEY FIX
+        extra="allow"
+    )
 
 
-@lru_cache()
+# Singleton instance
+_settings = None
+
 def get_settings() -> Settings:
-    """Get cached settings instance."""
-    return Settings()
+    global _settings
+    if _settings is None:
+        _settings = Settings()
+        # Debug logs
+        print("[CONFIG] Settings loaded")
+        print("[CONFIG] OPENAI_API_KEY env:", os.getenv("OPENAI_API_KEY", "NOT FOUND")[:20])
+        print("[CONFIG] OPENAI_API_KEY settings:", _settings.openai_api_key[:20] if _settings.openai_api_key else "EMPTY")
+    return _settings
