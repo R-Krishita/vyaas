@@ -4,7 +4,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import market_router
+from app.routers import market_router, chatbot_router
 from app.config import get_settings
 
 # Initialize FastAPI app
@@ -38,6 +38,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(market_router)
+app.include_router(chatbot_router)
 
 
 @app.get("/")
@@ -124,26 +125,6 @@ async def get_crop_recommendations(request: dict):
             }
         ]
     }
-
-
-class ChatbotRequest(BaseModel):
-    message: str
-    farmer_id: str = None
-    context: str = None
-
-@app.post("/api/chatbot/ask")
-async def chatbot_ask(request: ChatbotRequest):
-    """Chatbot endpoint with Gemini AI integration."""
-    from app.services.chatbot_service import get_chatbot_service
-    
-    chatbot_service = get_chatbot_service()
-    response = chatbot_service.get_response(
-        user_message=request.message,
-        farmer_id=request.farmer_id,
-        context=request.context
-    )
-    
-    return response
 
 
 if __name__ == "__main__":

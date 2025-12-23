@@ -1,7 +1,7 @@
 # app/services/chatbot_service.py
-# Chatbot service using OpenAI ChatGPT API for intelligent agricultural assistance
+# Chatbot service using Google Gemini API for intelligent agricultural assistance
 
-from openai import OpenAI
+import google.genai as genai
 from typing import Optional
 import logging
 
@@ -11,26 +11,26 @@ logger = logging.getLogger(__name__)
 
 
 class ChatbotService:
-    """Service for handling chatbot interactions with OpenAI ChatGPT."""
+    """Service for handling chatbot interactions with Google Gemini."""
 
     def __init__(self):
-        """Initialize the chatbot service with OpenAI API."""
+        """Initialize the chatbot service with Gemini API."""
         self.settings = get_settings()
         self.client = None
-        self._configure_openai()
+        self._configure_gemini()
 
-    def _configure_openai(self):
-        """Configure OpenAI API with the API key."""
-        if not self.settings.openai_api_key:
-            logger.warning("OpenAI API key not configured")
+    def _configure_gemini(self):
+        """Configure Gemini API with the API key."""
+        if not self.settings.gemini_api_key or self.settings.gemini_api_key == "your_gemini_api_key_here":
+            logger.warning("Gemini API key not configured")
             self.client = None
             return
 
         try:
-            self.client = OpenAI(api_key=self.settings.openai_api_key)
-            logger.info("OpenAI API configured successfully")
+            self.client = genai.Client(api_key=self.settings.gemini_api_key)
+            logger.info("Gemini API configured successfully")
         except Exception as e:
-            logger.error(f"Failed to configure OpenAI API: {e}")
+            logger.error(f"Failed to configure Gemini API: {e}")
             self.client = None
 
     def get_response(
@@ -39,11 +39,11 @@ class ChatbotService:
         farmer_id: Optional[str] = None,
         context: Optional[str] = None
     ) -> dict:
-        """Generate a chatbot response using OpenAI ChatGPT."""
+        """Generate a chatbot response using Google Gemini."""
 
         if not self.client:
             return {
-                "reply": "⚠️ Chatbot is not configured. Please add your OPENAI_API_KEY to the .env file.",
+                "reply": "⚠️ Chatbot is not configured. Please add your GEMINI_API_KEY to the .env file.",
                 "quick_replies": [],
                 "error": "API key not configured"
             }
@@ -56,22 +56,16 @@ class ChatbotService:
                 "Keep answers concise (under 150 words) and useful."
             )
 
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_message}
-            ]
-
+            full_prompt = f"{system_prompt}\n\n"
             if context:
-                messages.insert(1, {"role": "assistant", "content": f"Context: {context}"})
+                full_prompt += f"Context: {context}\n\n"
+            full_prompt += f"User question: {user_message}"
 
-            response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=messages,
-                max_tokens=300,
-                temperature=0.7
+            response = self.client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=full_prompt
             )
-
-            reply_text = response.choices[0].message.content
+            reply_text = response.text
 
             return {
                 "reply": reply_text,
@@ -79,11 +73,28 @@ class ChatbotService:
             }
 
         except Exception as e:
-            logger.error(f"OpenAI response error: {e}")
+            logger.error(f"Gemini response error: {e}")
+
+            error_text = str(e) if e is not None else "Unknown error"
+            normalized = error_text.lower()
+
+            if "resource_exhausted" in normalized or "quota" in normalized or "429" in normalized:
+                reply = (
+                    "⚠️ Gemini quota exceeded for this API key. "
+                    "Please check your Gemini API plan/billing and rate limits, then try again."
+                )
+            elif "unauth" in normalized or "permission" in normalized or "401" in normalized or "api key" in normalized:
+                reply = (
+                    "⚠️ Gemini authentication failed. "
+                    "Please verify `GEMINI_API_KEY` in `backend/.env` and restart the backend."
+                )
+            else:
+                reply = "I'm having trouble answering right now. Please try again in a moment."
+
             return {
-                "reply": f"I'm having trouble answering right now. Error: {str(e)}",
+                "reply": reply,
                 "quick_replies": ["Crop advice", "Market prices", "Pest control"],
-                "error": str(e)
+                "error": error_text[:500]
             }
 
     def _generate_quick_replies(self, user_message: str) -> list:

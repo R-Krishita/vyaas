@@ -1,9 +1,18 @@
 // src/constants/api.js
 // API configuration for the Smart Ayurvedic Crop Advisor
 
-// Change this to your computer's IP address (run `ipconfig` to find it)
-// Your phone must be on the same WiFi network as your computer
-export const API_BASE_URL = 'http://192.168.1.34:8000';
+import { Platform } from 'react-native';
+
+// Prefer configuring via Expo public env var:
+// - PowerShell: $env:EXPO_PUBLIC_API_BASE_URL="http://192.168.1.34:8000"; npm start
+// - Cmd: set EXPO_PUBLIC_API_BASE_URL=http://192.168.1.34:8000 && npm start
+const envBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+
+// Sensible dev defaults:
+// - Android emulator: 10.0.2.2 (maps to host machine localhost)
+// - iOS simulator / Web: localhost
+const defaultHost = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+export const API_BASE_URL = envBaseUrl || `http://${defaultHost}:8001`;
 
 export const API_ENDPOINTS = {
   // Auth
