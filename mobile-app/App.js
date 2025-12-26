@@ -7,6 +7,8 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AppNavigator from './src/navigation/AppNavigator';
 
+import { LanguageProvider } from './src/context/LanguageContext';
+
 const { width } = Dimensions.get('window');
 
 export default function App() {
@@ -14,12 +16,14 @@ export default function App() {
   if (Platform.OS === 'web') {
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <View style={styles.webContainer}>
-          <View style={styles.phoneFrame}>
-            <StatusBar style="light" />
-            <AppNavigator />
+        <LanguageProvider>
+          <View style={styles.webContainer}>
+            <View style={styles.phoneFrame}>
+              <StatusBar style="light" />
+              <AppNavigator />
+            </View>
           </View>
-        </View>
+        </LanguageProvider>
       </GestureHandlerRootView>
     );
   }
@@ -27,8 +31,10 @@ export default function App() {
   // For mobile, render normally
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style="light" />
-      <AppNavigator />
+      <LanguageProvider>
+        <StatusBar style="light" />
+        <AppNavigator />
+      </LanguageProvider>
     </GestureHandlerRootView>
   );
 }

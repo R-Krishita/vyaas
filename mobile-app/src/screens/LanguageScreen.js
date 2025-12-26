@@ -1,75 +1,132 @@
 // src/screens/LanguageScreen.js
-// Language selection screen - English is default
+// Language selection screen with Dropdown UI
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Modal, FlatList } from 'react-native';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { useLanguage } from '../context/LanguageContext';
 
 const languages = [
   { id: 'en', name: 'English', flag: '🇬🇧', isDefault: true },
   { id: 'hi', name: 'हिंदी', flag: '🇮🇳', isDefault: false },
   { id: 'mr', name: 'मराठी', flag: '🇮🇳', isDefault: false },
+  { id: 'gu', name: 'ગુજરાતી', flag: '🇮🇳', isDefault: false },
+  { id: 'ta', name: 'தமிழ்', flag: '🇮🇳', isDefault: false },
+  { id: 'te', name: 'తెలుగు', flag: '🇮🇳', isDefault: false },
+  { id: 'kn', name: 'ಕನ್ನಡ', flag: '🇮🇳', isDefault: false },
+  { id: 'bn', name: 'বাংলা', flag: '🇮🇳', isDefault: false },
+  { id: 'pa', name: 'ਪੰਜਾਬੀ', flag: '🇮🇳', isDefault: false },
+  { id: 'ml', name: 'മലയാളം', flag: '🇮🇳', isDefault: false },
+  { id: 'or', name: 'ଓଡ଼ିଆ', flag: '🇮🇳', isDefault: false },
+  { id: 'as', name: 'অসমীয়া', flag: '🇮🇳', isDefault: false },
 ];
 
 const LanguageScreen = ({ navigation }) => {
-  const [selectedLanguage, setSelectedLanguage] = useState('en'); // English default
+  const { language, setLanguage, t } = useLanguage();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Default to En if language not found in list (safe fallback)
+  const currentLang = languages.find(l => l.id === language) || languages[0];
 
   const handleLanguageSelect = (langId) => {
-    setSelectedLanguage(langId);
+    setLanguage(langId);
+    setIsDropdownOpen(false);
   };
 
   const handleContinue = () => {
-    // Store language preference (would use AsyncStorage in production)
-    navigation.replace('OTPLogin');
+    navigation.replace('Welcome');
   };
+
+  const renderDropdownItem = ({ item: lang }) => (
+    <TouchableOpacity
+      style={[
+        styles.dropdownItem,
+        language === lang.id && styles.dropdownItemSelected,
+      ]}
+      onPress={() => handleLanguageSelect(lang.id)}
+    >
+      <Text style={styles.dropdownFlag}>{lang.flag}</Text>
+      <Text style={[
+        styles.dropdownItemText,
+        language === lang.id && styles.dropdownItemTextSelected,
+      ]}>
+        {lang.name}
+      </Text>
+      {language === lang.id && (
+        <Text style={styles.checkmark}>✓</Text>
+      )}
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         {/* Header */}
-        <Text style={styles.title}>Select Language</Text>
-        <Text style={styles.subtitle}>भाषा चुनें</Text>
-        
-        {/* Language Options */}
-        <View style={styles.languageList}>
-          {languages.map((lang) => (
-            <TouchableOpacity
-              key={lang.id}
-              style={[
-                styles.languageCard,
-                selectedLanguage === lang.id && styles.languageCardSelected,
-              ]}
-              onPress={() => handleLanguageSelect(lang.id)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.flag}>{lang.flag}</Text>
-              <Text style={[
-                styles.languageName,
-                selectedLanguage === lang.id && styles.languageNameSelected,
-              ]}>
-                {lang.name}
-              </Text>
-              {lang.isDefault && (
-                <View style={styles.defaultBadge}>
-                  <Text style={styles.defaultText}>DEFAULT</Text>
-                </View>
-              )}
-              {selectedLanguage === lang.id && (
-                <Text style={styles.checkmark}>✓</Text>
-              )}
-            </TouchableOpacity>
-          ))}
+        <View style={styles.header}>
+          <Text style={styles.title}>{t('welcome_title')}</Text>
+          <Text style={styles.subtitle}>{t('language_subtitle')}</Text>
+          <Text style={styles.subtitleHindi}>{t('language_subtitle_hindi')}</Text>
         </View>
-        
+
+        {/* Dropdown Section */}
+        <View style={styles.formSection}>
+          <Text style={styles.label}>{t('language_label')} / भाषा</Text>
+
+          <TouchableOpacity
+            style={styles.dropdownTrigger}
+            onPress={() => setIsDropdownOpen(true)}
+            activeOpacity={0.8}
+          >
+            <View style={styles.triggerContent}>
+              <Text style={styles.triggerFlag}>{currentLang.flag}</Text>
+              <Text style={styles.triggerText}>{currentLang.name}</Text>
+            </View>
+            <Text style={styles.arrow}>▼</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Continue Button */}
-        <TouchableOpacity 
-          style={styles.continueButton}
-          onPress={handleContinue}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.continueText}>Continue →</Text>
-        </TouchableOpacity>
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={styles.continueButton}
+            onPress={handleContinue}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.continueText}>{t('continue_button')}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
+
+      {/* Dropdown Modal */}
+      <Modal
+        visible={isDropdownOpen}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsDropdownOpen(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setIsDropdownOpen(false)}
+        >
+          <View style={styles.dropdownModal}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('select_language')}</Text>
+              <TouchableOpacity onPress={() => setIsDropdownOpen(false)}>
+                <Text style={styles.closeButton}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={languages}
+              renderItem={renderDropdownItem}
+              keyExtractor={(item) => item.id}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.dropdownList}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
     </SafeAreaView>
   );
 };
@@ -81,68 +138,73 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: SPACING.lg,
-    justifyContent: 'center',
+    padding: SPACING.xl,
+    justifyContent: 'space-between',
+  },
+  header: {
+    marginTop: SPACING.xl,
+    alignItems: 'center',
   },
   title: {
-    fontSize: FONTS.sizes.xxl,
+    fontSize: 28,
     fontWeight: 'bold',
     color: COLORS.primary,
+    marginBottom: SPACING.md,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: FONTS.sizes.lg,
+    fontSize: FONTS.sizes.md,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginBottom: SPACING.xs,
+  },
+  subtitleHindi: {
+    fontSize: FONTS.sizes.md,
     color: COLORS.textSecondary,
     textAlign: 'center',
     marginBottom: SPACING.xl,
   },
-  languageList: {
-    marginBottom: SPACING.xl,
+  formSection: {
+    flex: 1,
+    justifyContent: 'center',
   },
-  languageCard: {
+  label: {
+    fontSize: FONTS.sizes.md,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    marginBottom: SPACING.sm,
+    marginLeft: SPACING.xs,
+  },
+  dropdownTrigger: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: COLORS.surface,
     padding: SPACING.lg,
     borderRadius: RADIUS.lg,
-    marginBottom: SPACING.md,
     borderWidth: 2,
     borderColor: COLORS.border,
     ...SHADOWS.sm,
   },
-  languageCardSelected: {
-    borderColor: COLORS.primary,
-    backgroundColor: '#E8F5E9',
+  triggerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  flag: {
-    fontSize: 32,
+  triggerFlag: {
+    fontSize: 24,
     marginRight: SPACING.md,
   },
-  languageName: {
+  triggerText: {
     fontSize: FONTS.sizes.lg,
+    color: COLORS.textPrimary,
     fontWeight: '600',
-    color: COLORS.textPrimary,
-    flex: 1,
   },
-  languageNameSelected: {
-    color: COLORS.primary,
+  arrow: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
   },
-  defaultBadge: {
-    backgroundColor: COLORS.accent,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 2,
-    borderRadius: RADIUS.sm,
-    marginRight: SPACING.sm,
-  },
-  defaultText: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
-  },
-  checkmark: {
-    fontSize: 24,
-    color: COLORS.primary,
-    fontWeight: 'bold',
+  footer: {
+    marginBottom: SPACING.xl,
   },
   continueButton: {
     backgroundColor: COLORS.primary,
@@ -154,6 +216,68 @@ const styles = StyleSheet.create({
   continueText: {
     color: COLORS.textLight,
     fontSize: FONTS.sizes.lg,
+    fontWeight: 'bold',
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    padding: SPACING.xl,
+  },
+  dropdownModal: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    maxHeight: '70%',
+    ...SHADOWS.lg,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: SPACING.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  modalTitle: {
+    fontSize: FONTS.sizes.lg,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+  },
+  closeButton: {
+    fontSize: 20,
+    color: COLORS.textSecondary,
+    padding: SPACING.xs,
+  },
+  dropdownList: {
+    padding: SPACING.sm,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
+    marginBottom: SPACING.xs,
+  },
+  dropdownItemSelected: {
+    backgroundColor: '#E8F5E9',
+  },
+  dropdownFlag: {
+    fontSize: 24,
+    marginRight: SPACING.md,
+  },
+  dropdownItemText: {
+    fontSize: FONTS.sizes.md,
+    color: COLORS.textPrimary,
+    flex: 1,
+  },
+  dropdownItemTextSelected: {
+    color: COLORS.primary,
+    fontWeight: 'bold',
+  },
+  checkmark: {
+    fontSize: 18,
+    color: COLORS.primary,
     fontWeight: 'bold',
   },
 });
