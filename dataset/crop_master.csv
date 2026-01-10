@@ -1,0 +1,61 @@
+crop_id,crop_name,botanical_name,crop_category,economic_priority,growth_duration_days_min,growth_duration_days_max,rotation_suitability_score,soil_restoration_index
+1,Kalmegh,Andrographis paniculata,Ayurvedic,High,120,150,0.75,0.65
+2,Pashanbheda,Bergenia ciliata,Ayurvedic,High,180,240,0.60,0.70
+3,Mandookparni,Centella asiatica,Ayurvedic,High,90,120,0.80,0.75
+4,Bhringaraja,Eclipta alba,Ayurvedic,Medium,60,90,0.85,0.80
+5,Vidanga,Embelia ribes,Ayurvedic,High,730,1095,0.45,0.55
+6,Kapikachu,Mucuna pruriens,Ayurvedic,High,150,180,0.70,0.85
+7,Pippali,Piper longum,Ayurvedic,High,365,545,0.50,0.60
+8,Rasna,Pluchea lanceolata,Ayurvedic,Medium,180,270,0.65,0.70
+9,Kantakari,Solanum surattense,Ayurvedic,Medium,120,180,0.70,0.65
+10,Ashwagandha,Withania somnifera,Ayurvedic,High,150,180,0.75,0.70
+11,Vach,Acorus calamus,Ayurvedic,Medium,180,270,0.55,0.75
+12,Bael,Aegle marmelos,Ayurvedic,High,1460,1825,0.40,0.50
+13,Aloe Vera,Aloe barbadensis miller,Ayurvedic,High,365,545,0.65,0.60
+14,Shatavari,Asparagus racemosus,Ayurvedic,High,545,730,0.55,0.75
+15,Neem,Azadirachta indica,Ayurvedic,High,1095,1825,0.35,0.80
+16,Brahmi,Bacopa monnieri,Ayurvedic,High,90,120,0.80,0.70
+17,Daruhaldi,Berberis aristata,Ayurvedic,High,730,1095,0.45,0.65
+18,Punarnava,Boerhaavia diffusa,Ayurvedic,Medium,90,120,0.85,0.80
+19,Senna,Cassia angustifolia,Ayurvedic,Medium,120,150,0.70,0.75
+20,Guggul,Commiphora wightii,Ayurvedic,High,2555,3650,0.30,0.45
+21,Amla,Emblica officinalis,Ayurvedic,High,1460,2190,0.40,0.55
+22,Kokum,Garcinia indica,Ayurvedic,High,2190,2920,0.35,0.50
+23,Gudmar,Gymnema sylvestre,Ayurvedic,High,365,545,0.55,0.65
+24,Nagakeshar,Mesua ferrea,Ayurvedic,High,2555,3650,0.30,0.45
+25,Jatamansi,Nardostachys jatamansi,Ayurvedic,High,730,1095,0.40,0.70
+26,Tulsi,Ocimum sanctum,Ayurvedic,Medium,90,150,0.85,0.75
+27,Kutki,Picrorhiza kurroa,Ayurvedic,High,730,1095,0.35,0.60
+28,Isabgol,Plantago ovata,Ayurvedic,Medium,120,150,0.75,0.70
+29,Sarpgandha,Rauwolfia serpentina,Ayurvedic,High,545,730,0.50,0.65
+30,Safed Musli,Chlorophytum borivilianum,Ayurvedic,High,180,270,0.60,0.75
+31,Rice,Oryza sativa,Cereal,High,90,150,0.70,0.55
+32,Wheat,Triticum aestivum,Cereal,High,120,150,0.75,0.60
+33,Maize,Zea mays,Cereal,High,90,120,0.80,0.50
+34,Pearl Millet,Pennisetum glaucum,Cereal,Medium,70,90,0.85,0.65
+35,Sorghum,Sorghum bicolor,Cereal,Medium,90,120,0.85,0.70
+36,Finger Millet,Eleusine coracana,Cereal,Medium,100,130,0.80,0.75
+37,Chickpea,Cicer arietinum,Pulse,High,90,120,0.90,0.85
+38,Pigeon Pea,Cajanus cajan,Pulse,High,150,270,0.85,0.90
+39,Green Gram,Vigna radiata,Pulse,Medium,60,75,0.90,0.85
+40,Black Gram,Vigna mungo,Pulse,Medium,70,90,0.90,0.85
+41,Lentil,Lens culinaris,Pulse,Medium,100,130,0.85,0.80
+42,Kidney Bean,Phaseolus vulgaris,Pulse,Medium,90,120,0.80,0.75
+43,Soybean,Glycine max,Oilseed,High,90,120,0.85,0.85
+44,Groundnut,Arachis hypogaea,Oilseed,High,100,130,0.80,0.80
+45,Mustard,Brassica juncea,Oilseed,Medium,110,150,0.75,0.65
+46,Sunflower,Helianthus annuus,Oilseed,Medium,90,120,0.70,0.55
+47,Cotton,Gossypium spp.,Cash Crop,High,150,180,0.55,0.40
+48,Jute,Corchorus olitorius,Cash Crop,Medium,120,150,0.60,0.70
+49,Sugarcane,Saccharum officinarum,Cash Crop,High,300,365,0.40,0.35
+50,Potato,Solanum tuberosum,Vegetable,High,70,120,0.65,0.45
+51,Tomato,Solanum lycopersicum,Vegetable,High,90,120,0.70,0.50
+52,Brinjal,Solanum melongena,Vegetable,Medium,90,150,0.70,0.55
+53,Okra,Abelmoschus esculentus,Vegetable,Medium,45,65,0.75,0.60
+54,Cabbage,Brassica oleracea var. capitata,Vegetable,Medium,90,120,0.65,0.50
+55,Cauliflower,Brassica oleracea var. botrytis,Vegetable,Medium,90,120,0.65,0.50
+56,Mango,Mangifera indica,Fruit,High,1825,2555,0.35,0.45
+57,Banana,Musa acuminata,Fruit,High,270,365,0.50,0.55
+58,Guava,Psidium guajava,Fruit,Medium,730,1095,0.55,0.60
+59,Papaya,Carica papaya,Fruit,Medium,270,365,0.60,0.55
+60,Grapes,Vitis vinifera,Fruit,High,1095,1460,0.45,0.50

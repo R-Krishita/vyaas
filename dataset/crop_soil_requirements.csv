@@ -1,0 +1,61 @@
+crop_id,ideal_soil_type,ph_min,ph_max,soil_moisture_min,soil_moisture_max,organic_carbon_min,organic_carbon_max,n_requirement,p_requirement,k_requirement,previous_crop_restrictions
+1,Sandy loam|Loamy,5.5,7.0,40,60,0.5,1.5,Medium,Medium,Medium,Tobacco|Brinjal
+2,Rocky|Sandy loam,5.0,6.5,35,55,0.8,2.0,Medium,High,High,Ginger
+3,Loamy|Marshy,6.0,7.5,70,90,1.0,2.5,Medium,Medium,Medium,Rice
+4,Loamy|Clay loam,6.0,7.5,50,75,0.8,2.0,Medium,Medium,Medium,
+5,Red loamy|Laterite,5.5,7.0,40,65,0.6,1.8,Low,Low,Low,Cotton
+6,Sandy loam|Red loamy,5.5,7.5,35,55,0.5,1.5,Low,Low,Low,Pigeon pea
+7,Loamy|Clay loam,5.5,7.0,60,80,1.0,2.5,Low,Low,Low,Black pepper
+8,Sandy|Sandy loam,7.0,8.5,25,45,0.4,1.2,Medium,Medium,Medium,
+9,Sandy loam|Loamy,6.0,8.0,30,50,0.5,1.5,Medium,Medium,Medium,Tomato|Potato
+10,Sandy loam|Light soil,7.0,8.0,25,45,0.5,1.2,Medium,High,High,Onion|Garlic
+11,Loamy|Marshy|Clay loam,5.5,7.5,75,95,1.5,3.0,Medium,High,High,
+12,Sandy loam|Clay loam,5.0,8.0,30,60,0.4,1.5,Low,Low,Low,
+13,Sandy|Sandy loam,6.5,8.5,20,40,0.3,1.0,Medium,Medium,Medium,
+14,Loamy|Sandy loam,6.0,8.0,45,70,0.8,2.0,Medium,High,High,Ginger|Turmeric
+15,Sandy loam|Clay loam|Black soil,5.0,8.5,30,60,0.4,1.5,Low,Low,Low,
+16,Loamy|Marshy|Clay loam,6.0,7.5,75,95,1.2,2.5,Medium,Medium,Medium,
+17,Sandy loam|Rocky,5.5,7.0,40,60,0.6,1.8,Low,Low,Low,
+18,Sandy loam|Loamy,6.0,8.5,35,55,0.4,1.2,Medium,Medium,Medium,
+19,Sandy loam|Red loamy,7.0,8.5,25,45,0.3,1.0,Medium,Medium,Medium,Sugarcane
+20,Rocky|Sandy,7.0,8.5,15,35,0.2,0.8,Low,Low,Low,
+21,Loamy|Sandy loam|Clay loam,5.5,8.0,35,60,0.5,1.5,Low,Low,Low,
+22,Red laterite|Loamy,5.0,6.5,60,80,1.0,2.5,Low,Low,Low,
+23,Red loamy|Sandy loam,6.0,7.5,40,65,0.6,1.8,Medium,High,High,
+24,Loamy|Clay loam,5.0,6.5,65,85,1.5,3.0,Low,Low,Low,
+25,Loamy|Humus-rich,5.0,6.0,55,75,2.0,4.0,Medium,High,High,
+26,Loamy|Sandy loam,6.0,7.5,40,60,0.6,1.8,Medium,Medium,Medium,
+27,Loamy|Humus-rich,5.0,6.0,60,80,2.5,4.5,Medium,High,High,
+28,Sandy loam|Light soil,7.0,8.5,20,40,0.3,1.0,Medium,Medium,Medium,Rice|Sugarcane
+29,Loamy|Clay loam,5.5,7.5,55,75,1.0,2.5,Medium,High,High,Tobacco
+30,Sandy loam|Red loamy,6.0,8.0,40,60,0.8,2.0,Medium,High,High,Onion|Garlic
+31,Clay|Clay loam|Silty clay,5.5,7.5,80,100,0.6,1.8,High,Medium,Medium,Rice
+32,Loamy|Clay loam|Alluvial,6.0,8.0,40,60,0.5,1.5,High,Medium,Medium,Rice|Maize
+33,Loamy|Sandy loam|Alluvial,5.5,7.5,50,75,0.6,1.8,High,Medium,Medium,Maize
+34,Sandy|Sandy loam|Light soil,6.5,8.5,20,40,0.3,1.0,High,Medium,Medium,
+35,Sandy loam|Clay loam|Black soil,5.5,8.5,30,55,0.4,1.2,High,Medium,Medium,
+36,Sandy loam|Red loamy|Laterite,5.5,7.5,35,55,0.4,1.2,High,Medium,Medium,
+37,Loamy|Sandy loam|Black soil,5.5,7.5,40,60,0.5,1.5,Low,High,Medium,Chickpea
+38,Loamy|Sandy loam|Black soil,5.5,8.0,35,55,0.5,1.5,Low,High,Medium,Pigeon pea
+39,Loamy|Sandy loam,6.0,7.5,40,60,0.5,1.5,Low,High,Medium,
+40,Loamy|Clay loam,6.0,7.5,45,65,0.5,1.5,Low,High,Medium,
+41,Loamy|Sandy loam,5.5,7.5,40,60,0.5,1.5,Low,High,Medium,
+42,Loamy|Sandy loam,6.0,7.5,45,65,0.6,1.8,Low,High,Medium,
+43,Loamy|Clay loam|Alluvial,6.0,7.5,50,70,0.6,1.8,Medium,High,Medium,Soybean
+44,Sandy loam|Loamy,5.5,7.5,35,55,0.5,1.5,Medium,High,Medium,Groundnut
+45,Loamy|Sandy loam|Alluvial,5.5,8.0,35,55,0.5,1.5,Medium,High,Medium,
+46,Loamy|Sandy loam|Black soil,6.0,8.0,40,65,0.5,1.5,Medium,High,Medium,Sunflower
+47,Black soil|Alluvial|Loamy,6.0,8.5,40,65,0.5,1.5,High,High,High,Cotton
+48,Sandy loam|Clay loam|Alluvial,5.5,7.5,70,90,0.8,2.0,High,High,High,
+49,Loamy|Clay loam|Alluvial,5.5,8.5,60,85,0.8,2.5,High,High,High,Sugarcane
+50,Sandy loam|Loamy,5.5,7.0,50,70,0.8,2.0,High,Medium,Medium,Potato|Tomato
+51,Loamy|Sandy loam,6.0,7.5,50,70,0.8,2.0,High,Medium,Medium,Tomato|Brinjal|Potato
+52,Loamy|Clay loam,5.5,7.5,50,70,0.6,1.8,High,Medium,Medium,Brinjal|Tomato
+53,Loamy|Sandy loam,6.0,7.5,45,65,0.6,1.8,High,Medium,Medium,Okra
+54,Loamy|Clay loam,6.0,7.5,55,75,0.8,2.0,High,Medium,Medium,Cabbage|Cauliflower
+55,Loamy|Clay loam,6.0,7.5,55,75,0.8,2.0,High,Medium,Medium,Cauliflower|Cabbage
+56,Loamy|Alluvial|Laterite,5.5,7.5,40,65,0.5,1.5,Medium,Medium,High,
+57,Loamy|Clay loam|Alluvial,5.5,7.5,65,85,1.0,2.5,Medium,Medium,High,Banana
+58,Sandy loam|Loamy,5.5,7.5,45,70,0.5,1.5,Medium,Medium,High,
+59,Sandy loam|Loamy,6.0,7.5,55,75,0.8,2.0,Medium,Medium,High,
+60,Sandy loam|Loamy|Clay loam,6.0,8.0,40,60,0.5,1.5,Medium,Medium,High,Grapes

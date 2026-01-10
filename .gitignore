@@ -79,3 +79,18 @@ credentials.json
 # JWT/API Keys
 jwt_secret.txt
 api_keys.txt
+
+# dataset
+generate_farmer_inputs.py
+remerge_crops.py
+update_soil_npk.py
+crop_recommendation_model.pkl
+label_encoders.pkl
+dataset/farmer_inputs.csv
+dataset/crops_merged.csv
+
+# Knowledge PDFs & Documentation
+antigravity DB structure prompt.pdf
+Crop names - Crop Names.pdf
+db design (crop knowledge masterbase).pdf
+farmer inputs in vyaas app.pdf
