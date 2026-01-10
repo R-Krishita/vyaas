@@ -11,6 +11,7 @@ import { COLORS } from '../constants/theme';
 // Import screens
 import SplashScreen from '../screens/SplashScreen';
 import LanguageScreen from '../screens/LanguageScreen';
+import WelcomeScreen from '../screens/WelcomeScreen';
 import OTPLoginScreen from '../screens/OTPLoginScreen';
 import HomeScreen from '../screens/HomeScreen';
 import FarmDetailsScreen from '../screens/FarmDetailsScreen';
@@ -174,8 +175,9 @@ const AppNavigator = () => (
       {/* Auth Flow */}
       <Stack.Screen name="Splash" component={SplashScreen} />
       <Stack.Screen name="Language" component={LanguageScreen} />
+      <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="OTPLogin" component={OTPLoginScreen} />
-      
+
       {/* Main App with persistent tabs */}
       <Stack.Screen name="MainTabs" component={MainTabs} />
     </Stack.Navigator>
