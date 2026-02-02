@@ -31,6 +31,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 package-lock.json
+node_modules/
 
 # Expo & React Native
 .expo/
@@ -94,3 +95,16 @@ antigravity DB structure prompt.pdf
 Crop names - Crop Names.pdf
 db design (crop knowledge masterbase).pdf
 farmer inputs in vyaas app.pdf
+
+# Gemini AI
+.gemini/
+
+# Firebase config (contains API keys)
+**/firebase.js
+**/firebase.ts
+**/firebaseConfig.js
+google-services.json
+GoogleService-Info.plist
+
+# Yarn
+yarn.lock
