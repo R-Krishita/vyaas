@@ -1,79 +1,82 @@
-import React, { useEffect, useState } from "react";
-import { View, TextInput, Button, Alert, StyleSheet } from "react-native";
-import { signInWithPhoneNumber, RecaptchaVerifier } from "firebase/auth";
-import { auth } from "../firebase";
+import React, { useState } from "react";
+import { View, TextInput, Button, Alert, StyleSheet, Text } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+
+// 🔹 TEMPORARY: Firebase OTP auth bypassed for development
+// TODO: Re-enable Firebase auth before production
 
 export default function OTPLoginScreen() {
+  const navigation = useNavigation();
   const [phone, setPhone] = useState("");
-  const [confirmation, setConfirmation] = useState(null);
-  const [otp, setOtp] = useState("");
 
-  // 🔹 REQUIRED for Firebase Web OTP
-  useEffect(() => {
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(
-        auth,
-        "recaptcha-container",
-        {
-          size: "invisible",
-        }
+  const handleLogin = () => {
+    // Just check if any number is entered (minimum 10 digits)
+    if (phone.replace(/\D/g, "").length >= 10) {
+      // Navigate directly to main dashboard
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "MainTabs" }],
+      });
+    } else {
+      Alert.alert(
+        "Invalid",
+        "Please enter a valid phone number (min 10 digits)",
       );
-    }
-  }, []);
-
-  const sendOTP = async () => {
-    try {
-      const confirmationResult = await signInWithPhoneNumber(
-        auth,
-        phone,
-        window.recaptchaVerifier
-      );
-      setConfirmation(confirmationResult);
-      Alert.alert("OTP sent");
-    } catch (e) {
-      Alert.alert("Error", e.message);
-    }
-  };
-
-  const verifyOTP = async () => {
-    try {
-      await confirmation.confirm(otp);
-      Alert.alert("Login Success");
-    } catch {
-      Alert.alert("Invalid OTP");
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* 🔴 THIS IS MANDATORY */}
-      <div id="recaptcha-container"></div>
+      <Text style={styles.title}>🌿 Welcome to VYAAS</Text>
+      <Text style={styles.subtitle}>Enter your phone number to continue</Text>
 
       <TextInput
-        placeholder="+91XXXXXXXXXX"
+        placeholder="+91 XXXXXXXXXX"
         value={phone}
         onChangeText={setPhone}
+        keyboardType="phone-pad"
         style={styles.input}
       />
 
-      <Button title="Send OTP" onPress={sendOTP} />
+      <Button title="Continue" onPress={handleLogin} color="#2E7D32" />
 
-      {confirmation && (
-        <>
-          <TextInput
-            placeholder="Enter OTP"
-            value={otp}
-            onChangeText={setOtp}
-            style={styles.input}
-          />
-          <Button title="Verify OTP" onPress={verifyOTP} />
-        </>
-      )}
+      <Text style={styles.devNote}>
+        🔧 Dev Mode: Any 10+ digit number will work
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, marginTop: 80 },
-  input: { borderWidth: 1, padding: 12, marginVertical: 10 },
+  container: {
+    padding: 20,
+    marginTop: 80,
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#2E7D32",
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#666",
+    marginBottom: 30,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 15,
+    marginVertical: 10,
+    width: "100%",
+    fontSize: 18,
+  },
+  devNote: {
+    marginTop: 20,
+    fontSize: 12,
+    color: "#999",
+    fontStyle: "italic",
+  },
 });

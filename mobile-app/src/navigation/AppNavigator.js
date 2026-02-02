@@ -120,6 +120,34 @@ const ProfileStackScreen = () => (
   </ProfileStack.Navigator>
 );
 
+// Farm Tab Stack - direct access to farm details
+const FarmStackScreen = () => (
+  <HomeStack.Navigator screenOptions={screenOptions}>
+    <HomeStack.Screen
+      name="FarmMain"
+      component={FarmDetailsScreen}
+      options={{ headerTitle: '🚜 Farm Details' }}
+    />
+    <HomeStack.Screen
+      name="Recommendations"
+      component={RecommendationsScreen}
+      options={{ headerTitle: '🌾 Recommendations' }}
+    />
+  </HomeStack.Navigator>
+);
+
+// Market Tab Stack - direct access to market prices
+const MarketStack = createNativeStackNavigator();
+const MarketStackScreen = () => (
+  <MarketStack.Navigator screenOptions={screenOptions}>
+    <MarketStack.Screen
+      name="MarketMain"
+      component={MarketInsightsScreen}
+      options={{ headerTitle: '📊 Market Prices' }}
+    />
+  </MarketStack.Navigator>
+);
+
 // Bottom Tab Navigator - always visible
 const MainTabs = () => (
   <Tab.Navigator
@@ -145,11 +173,29 @@ const MainTabs = () => (
       }}
     />
     <Tab.Screen
+      name="Farm"
+      component={FarmStackScreen}
+      options={{
+        tabBarIcon: ({ focused }) => (
+          <TabIcon icon="🚜" label="Farm" focused={focused} />
+        ),
+      }}
+    />
+    <Tab.Screen
       name="Crops"
       component={CropsStackScreen}
       options={{
         tabBarIcon: ({ focused }) => (
           <TabIcon icon="🌿" label="Crops" focused={focused} />
+        ),
+      }}
+    />
+    <Tab.Screen
+      name="Market"
+      component={MarketStackScreen}
+      options={{
+        tabBarIcon: ({ focused }) => (
+          <TabIcon icon="📊" label="Market" focused={focused} />
         ),
       }}
     />
