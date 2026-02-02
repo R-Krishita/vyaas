@@ -4,7 +4,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import market_router, chatbot_router
+from app.routers import market_router, chatbot_router, farm_router, ml_router
 from app.config import get_settings
 
 # Initialize FastAPI app
@@ -39,6 +39,8 @@ app.add_middleware(
 # Include routers
 app.include_router(market_router)
 app.include_router(chatbot_router)
+app.include_router(farm_router.router)
+app.include_router(ml_router.router)
 
 
 @app.get("/")
@@ -91,40 +93,7 @@ async def verify_otp(request: OTPVerifyRequest):
     return {"success": True, "token": "placeholder_jwt_token", "farmer_id": "F001"}
 
 
-@app.post("/api/farm/save")
-async def save_farm_details(farm_data: dict):
-    """Save farm details (placeholder)."""
-    return {"success": True, "farm_id": "FARM_001", "message": "Farm details saved"}
 
-
-@app.post("/api/ml/recommend")
-async def get_crop_recommendations(request: dict):
-    """Get crop recommendations (placeholder - connect ML model later)."""
-    return {
-        "recommendations": [
-            {
-                "rank": 1,
-                "crop_name": "Tulsi",
-                "match_score": 92,
-                "profit_estimate": 45000,
-                "reasons": ["Suitable for your soil", "Low water needs", "Good market price"]
-            },
-            {
-                "rank": 2,
-                "crop_name": "Ashwagandha", 
-                "match_score": 85,
-                "profit_estimate": 38000,
-                "reasons": ["High demand", "Drought tolerant"]
-            },
-            {
-                "rank": 3,
-                "crop_name": "Turmeric",
-                "match_score": 78,
-                "profit_estimate": 32000,
-                "reasons": ["Traditional crop", "Easy cultivation"]
-            }
-        ]
-    }
 
 
 if __name__ == "__main__":
