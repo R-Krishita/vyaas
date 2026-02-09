@@ -108,3 +108,5 @@ GoogleService-Info.plist
 
 # Yarn
 yarn.lock
+
+documentation.md
