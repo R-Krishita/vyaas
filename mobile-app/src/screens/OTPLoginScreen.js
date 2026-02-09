@@ -1,47 +1,88 @@
-import React, { useState } from "react";
-import { View, TextInput, Button, Alert, StyleSheet, Text } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+// mobile-app/src/screens/OTPLoginScreen.js
+// Phone number input screen for OTP login
 
-// 🔹 TEMPORARY: Firebase OTP auth bypassed for development
-// TODO: Re-enable Firebase auth before production
+import React, { useState } from "react";
+import {
+  View,
+  TextInput,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { sendOtp } from "../services/authApi";
 
 export default function OTPLoginScreen() {
   const navigation = useNavigation();
   const [phone, setPhone] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    // Just check if any number is entered (minimum 10 digits)
-    if (phone.replace(/\D/g, "").length >= 10) {
-      // Navigate directly to main dashboard
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "MainTabs" }],
-      });
-    } else {
-      Alert.alert(
-        "Invalid",
-        "Please enter a valid phone number (min 10 digits)",
-      );
+  const formatPhone = (text) => {
+    // Remove non-digits
+    const digits = text.replace(/\D/g, "");
+    // Format: keep only digits, max 10
+    return digits.slice(0, 10);
+  };
+
+  const handleSendOtp = async () => {
+    const cleanPhone = phone.replace(/\D/g, "");
+    if (cleanPhone.length < 10) {
+      Alert.alert("Invalid", "Please enter a valid 10-digit phone number");
+      return;
+    }
+
+    const fullPhone = `+91${cleanPhone}`;
+    setLoading(true);
+
+    try {
+      const response = await sendOtp(fullPhone);
+      if (response.success) {
+        navigation.navigate("OTPVerification", { phone: fullPhone });
+      }
+    } catch (error) {
+      Alert.alert("Error", error.message || "Failed to send OTP. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🌿 Welcome to VYAAS</Text>
-      <Text style={styles.subtitle}>Enter your phone number to continue</Text>
+      <Text style={styles.emoji}>🌿</Text>
+      <Text style={styles.title}>Welcome to VYAAS</Text>
+      <Text style={styles.subtitle}>
+        Enter your phone number to receive an OTP
+      </Text>
 
-      <TextInput
-        placeholder="+91 XXXXXXXXXX"
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-        style={styles.input}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.countryCode}>+91</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter phone number"
+          placeholderTextColor="#999"
+          value={phone}
+          onChangeText={(text) => setPhone(formatPhone(text))}
+          keyboardType="phone-pad"
+          maxLength={10}
+        />
+      </View>
 
-      <Button title="Continue" onPress={handleLogin} color="#2E7D32" />
+      <TouchableOpacity
+        style={[styles.button, loading && styles.buttonDisabled]}
+        onPress={handleSendOtp}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Send OTP</Text>
+        )}
+      </TouchableOpacity>
 
-      <Text style={styles.devNote}>
-        🔧 Dev Mode: Any 10+ digit number will work
+      <Text style={styles.disclaimer}>
+        By continuing, you agree to our Terms of Service and Privacy Policy
       </Text>
     </View>
   );
@@ -49,9 +90,15 @@ export default function OTPLoginScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    marginTop: 80,
+    flex: 1,
+    padding: 24,
+    backgroundColor: "#fff",
     alignItems: "center",
+    justifyContent: "center",
+  },
+  emoji: {
+    fontSize: 64,
+    marginBottom: 16,
   },
   title: {
     fontSize: 28,
@@ -62,21 +109,55 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: "#666",
-    marginBottom: 30,
+    textAlign: "center",
+    marginBottom: 40,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#ddd",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    width: "100%",
+    marginBottom: 24,
+  },
+  countryCode: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginRight: 8,
+    paddingRight: 8,
+    borderRightWidth: 1,
+    borderRightColor: "#ddd",
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 15,
-    marginVertical: 10,
-    width: "100%",
+    flex: 1,
     fontSize: 18,
+    paddingVertical: 16,
+    color: "#333",
   },
-  devNote: {
-    marginTop: 20,
+  button: {
+    backgroundColor: "#2E7D32",
+    paddingVertical: 16,
+    paddingHorizontal: 48,
+    borderRadius: 12,
+    width: "100%",
+    alignItems: "center",
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  disclaimer: {
+    marginTop: 24,
     fontSize: 12,
     color: "#999",
-    fontStyle: "italic",
+    textAlign: "center",
+    paddingHorizontal: 20,
   },
 });
