@@ -20,6 +20,7 @@ import MarketInsightsScreen from '../screens/MarketInsightsScreen';
 import CultivationPlanScreen from '../screens/CultivationPlanScreen';
 import ChatbotScreen from '../screens/ChatbotScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import OTPVerificationScreen from '../screens/OTPVerificationScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -223,6 +224,7 @@ const AppNavigator = () => (
       <Stack.Screen name="Language" component={LanguageScreen} />
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="OTPLogin" component={OTPLoginScreen} />
+      <Stack.Screen name="OTPVerification" component={OTPVerificationScreen} />
 
       {/* Main App with persistent tabs */}
       <Stack.Screen name="MainTabs" component={MainTabs} />
