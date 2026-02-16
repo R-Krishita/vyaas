@@ -4,6 +4,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { COLORS, FONTS, SPACING } from '../constants/theme';
+import shared from '../styles/style';
 
 const SplashScreen = ({ navigation }) => {
   useEffect(() => {
@@ -40,11 +41,7 @@ const SplashScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: SPACING.lg,
+    ...shared.centeredContainer,
   },
   logoContainer: {
     alignItems: 'center',
@@ -72,9 +69,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
+    ...shared.loadingText,
     marginTop: SPACING.sm,
     fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
   },
 });
 

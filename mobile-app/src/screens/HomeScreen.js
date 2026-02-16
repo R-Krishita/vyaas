@@ -11,8 +11,8 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import shared from '../styles/style';
 import HeroCarousel from '../components/HeroCarousel';
-import ChatbotFAB from '../components/ChatbotFAB';
 
 const actionCards = [
   {
@@ -57,9 +57,7 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  const handleChatbotPress = () => {
-    navigation.navigate('Chatbot');
-  };
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -120,22 +118,16 @@ const HomeScreen = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      {/* Chatbot FAB */}
-      <ChatbotFAB onPress={handleChatbotPress} />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
+    ...shared.screenContainer,
     position: 'relative',
   },
-  scrollView: {
-    flex: 1,
-    padding: SPACING.lg,
-  },
+  scrollView: shared.scrollView,
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -163,12 +155,7 @@ const styles = StyleSheet.create({
   profileIcon: {
     fontSize: 24,
   },
-  sectionTitle: {
-    fontSize: FONTS.sizes.lg,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.md,
-  },
+  sectionTitle: shared.sectionTitle,
   cardsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -201,30 +188,14 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   statsContainer: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.lg,
+    ...shared.statsRow,
     marginBottom: SPACING.xxl,
-    ...SHADOWS.sm,
   },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: FONTS.sizes.lg,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  statLabel: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    marginTop: 4,
-  },
+  statItem: shared.statItem,
+  statValue: shared.statValue,
+  statLabel: shared.statLabel,
   statDivider: {
-    width: 1,
-    backgroundColor: COLORS.border,
+    ...shared.statDivider,
     marginHorizontal: SPACING.sm,
   },
 });

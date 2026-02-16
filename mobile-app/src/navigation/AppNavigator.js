@@ -18,7 +18,6 @@ import FarmDetailsScreen from '../screens/FarmDetailsScreen';
 import RecommendationsScreen from '../screens/RecommendationsScreen';
 import MarketInsightsScreen from '../screens/MarketInsightsScreen';
 import CultivationPlanScreen from '../screens/CultivationPlanScreen';
-import ChatbotScreen from '../screens/ChatbotScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import OTPVerificationScreen from '../screens/OTPVerificationScreen';
 
@@ -76,11 +75,7 @@ const HomeStackScreen = () => (
       component={CultivationPlanScreen}
       options={{ headerTitle: '📋 Cultivation Plan' }}
     />
-    <HomeStack.Screen
-      name="Chatbot"
-      component={ChatbotScreen}
-      options={{ headerTitle: '🤖 Crop Assistant' }}
-    />
+
   </HomeStack.Navigator>
 );
 

@@ -11,6 +11,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import shared from '../styles/style';
 
 const ProfileScreen = ({ navigation }) => {
   const farmer = {
@@ -94,14 +95,8 @@ const ProfileScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  scrollView: {
-    flex: 1,
-    padding: SPACING.lg,
-  },
+  container: shared.screenContainer,
+  scrollView: shared.scrollView,
   profileHeader: {
     alignItems: 'center',
     marginBottom: SPACING.lg,
@@ -130,31 +125,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   statsCard: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.lg,
+    ...shared.statsRow,
     marginBottom: SPACING.lg,
-    ...SHADOWS.sm,
   },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: FONTS.sizes.lg,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  statLabel: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    marginTop: 4,
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: COLORS.border,
-  },
+  statItem: shared.statItem,
+  statValue: shared.statValue,
+  statLabel: shared.statLabel,
+  statDivider: shared.statDivider,
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',

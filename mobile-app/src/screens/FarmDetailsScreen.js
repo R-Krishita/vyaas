@@ -13,6 +13,7 @@ import {
   Alert,
 } from 'react-native';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import shared from '../styles/style';
 import { farmAPI } from '../services/api';
 
 const soilTypes = ['Black', 'Red', 'Alluvial', 'Laterite', 'Sandy', 'Clay'];
@@ -215,10 +216,7 @@ const FarmDetailsScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
+  container: shared.screenContainer,
   progressContainer: {
     padding: SPACING.lg,
     paddingBottom: 0,
@@ -239,10 +237,7 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     textAlign: 'right',
   },
-  scrollView: {
-    flex: 1,
-    padding: SPACING.lg,
-  },
+  scrollView: shared.scrollView,
   stepTitle: {
     fontSize: FONTS.sizes.xl,
     fontWeight: 'bold',
@@ -252,21 +247,8 @@ const styles = StyleSheet.create({
   fieldContainer: {
     marginBottom: SPACING.lg,
   },
-  fieldLabel: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.sm,
-  },
-  textInput: {
-    backgroundColor: COLORS.surface,
-    padding: SPACING.md,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    fontSize: FONTS.sizes.md,
-    color: COLORS.textPrimary,
-  },
+  fieldLabel: shared.fieldLabel,
+  textInput: shared.textInput,
   optionsRow: {
     flexDirection: 'row',
   },
@@ -371,17 +353,14 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
   },
   nextButton: {
+    ...shared.primaryButton,
     flex: 2,
     padding: SPACING.md,
     borderRadius: RADIUS.md,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    ...SHADOWS.md,
   },
   nextButtonText: {
+    ...shared.primaryButtonText,
     fontSize: FONTS.sizes.md,
-    fontWeight: 'bold',
-    color: COLORS.textLight,
   },
 });
 

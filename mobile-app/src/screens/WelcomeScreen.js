@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView } from 'react-native';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import shared from '../styles/style';
 import { useLanguage } from '../context/LanguageContext';
 
 const WelcomeScreen = ({ navigation }) => {
@@ -48,14 +49,9 @@ const WelcomeScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: COLORS.background,
-    },
+    container: shared.screenContainer,
     content: {
-        flex: 1,
-        padding: SPACING.xl,
-        justifyContent: 'space-between',
+        ...shared.contentPadded,
         alignItems: 'center',
     },
     heroSection: {
@@ -68,13 +64,7 @@ const styles = StyleSheet.create({
         fontSize: 80,
         marginBottom: SPACING.lg,
     },
-    title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: COLORS.primary,
-        textAlign: 'center',
-        marginBottom: SPACING.sm,
-    },
+    title: shared.screenTitleLarge,
     subtitle: {
         fontSize: FONTS.sizes.lg,
         color: COLORS.textSecondary,
@@ -85,38 +75,11 @@ const styles = StyleSheet.create({
         width: '100%',
         marginBottom: SPACING.xl,
     },
-    loginButton: {
-        backgroundColor: COLORS.primary,
-        padding: SPACING.lg,
-        borderRadius: RADIUS.lg,
-        alignItems: 'center',
-        marginBottom: SPACING.md,
-        ...SHADOWS.md,
-    },
-    loginButtonText: {
-        color: COLORS.textLight,
-        fontSize: FONTS.sizes.lg,
-        fontWeight: 'bold',
-    },
-    signupButton: {
-        backgroundColor: COLORS.surface,
-        padding: SPACING.lg,
-        borderRadius: RADIUS.lg,
-        alignItems: 'center',
-        borderWidth: 2,
-        borderColor: COLORS.primary,
-    },
-    signupButtonText: {
-        color: COLORS.primary,
-        fontSize: FONTS.sizes.lg,
-        fontWeight: 'bold',
-    },
-    footerText: {
-        fontSize: FONTS.sizes.sm,
-        color: COLORS.textMuted,
-        textAlign: 'center',
-        marginBottom: SPACING.sm,
-    },
+    loginButton: shared.primaryButton,
+    loginButtonText: shared.primaryButtonText,
+    signupButton: shared.outlineButton,
+    signupButtonText: shared.outlineButtonText,
+    footerText: shared.footerText,
 });
 
 export default WelcomeScreen;

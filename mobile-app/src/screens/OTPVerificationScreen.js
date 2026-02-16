@@ -14,6 +14,8 @@ import {
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { verifyOtp } from "../services/authApi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
+import shared from '../styles/style';
 
 export default function OTPVerificationScreen() {
   const navigation = useNavigation();
@@ -150,75 +152,58 @@ export default function OTPVerificationScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 24,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
+    ...shared.centeredContainer,
+    backgroundColor: COLORS.surface,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#2E7D32",
-    marginBottom: 8,
+    ...shared.screenTitleLarge,
+    marginBottom: SPACING.sm,
   },
   subtitle: {
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
-    marginBottom: 32,
+    ...shared.screenSubtitle,
+    marginBottom: SPACING.xl,
     lineHeight: 24,
   },
   phone: {
     fontWeight: "bold",
-    color: "#333",
+    color: COLORS.textPrimary,
   },
   otpContainer: {
     flexDirection: "row",
     justifyContent: "center",
     gap: 10,
-    marginBottom: 32,
+    marginBottom: SPACING.xl,
   },
   otpInput: {
     width: 48,
     height: 56,
     borderWidth: 2,
-    borderColor: "#ddd",
-    borderRadius: 12,
+    borderColor: COLORS.border,
+    borderRadius: RADIUS.md,
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
-    color: "#333",
+    color: COLORS.textPrimary,
   },
   otpInputFilled: {
-    borderColor: "#2E7D32",
-    backgroundColor: "#E8F5E9",
+    borderColor: COLORS.primary,
+    backgroundColor: '#E8F5E9',
   },
   verifyButton: {
-    backgroundColor: "#2E7D32",
-    paddingVertical: 16,
-    paddingHorizontal: 48,
-    borderRadius: 12,
+    ...shared.primaryButton,
     width: "100%",
-    alignItems: "center",
   },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  verifyButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
-  },
+  buttonDisabled: shared.buttonDisabled,
+  verifyButtonText: shared.primaryButtonText,
   resendContainer: {
-    marginTop: 24,
+    marginTop: SPACING.lg,
   },
   resendText: {
-    color: "#2E7D32",
-    fontSize: 16,
+    color: COLORS.primary,
+    fontSize: FONTS.sizes.md,
     fontWeight: "500",
   },
   resendDisabled: {
-    color: "#999",
+    color: COLORS.textMuted,
   },
 });

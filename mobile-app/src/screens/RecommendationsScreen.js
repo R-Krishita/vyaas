@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import shared from '../styles/style';
 import { recommendAPI } from '../services/api';
 
 // Demo recommendations (used when API fails)
@@ -99,7 +100,7 @@ const RecommendationsScreen = ({ navigation }) => {
               <Text style={styles.medal}>{medals[index]}</Text>
               <View style={styles.cropInfo}>
                 <Text style={styles.cropName}>
-                  {crop.crop_name} ({crop.crop_name_hi})
+                  {crop.crop_name}{crop.crop_name_hi && crop.crop_name_hi !== crop.crop_name ? ` (${crop.crop_name_hi})` : ''}
                 </Text>
                 <Text style={styles.cropIcon}>{crop.icon}</Text>
               </View>
@@ -160,35 +161,16 @@ const RecommendationsScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.background,
-  },
-  loadingText: {
-    marginTop: SPACING.md,
-    fontSize: FONTS.sizes.md,
-    color: COLORS.textSecondary,
-  },
-  scrollView: {
-    flex: 1,
-    padding: SPACING.lg,
-  },
+  container: shared.screenContainer,
+  loadingContainer: shared.loadingContainer,
+  loadingText: shared.loadingText,
+  scrollView: shared.scrollView,
   title: {
-    fontSize: FONTS.sizes.xl,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-    textAlign: 'center',
+    ...shared.screenTitle,
+    marginBottom: SPACING.xs,
   },
   subtitle: {
-    fontSize: FONTS.sizes.md,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
+    ...shared.screenSubtitle,
     marginBottom: SPACING.lg,
   },
   cropCard: {

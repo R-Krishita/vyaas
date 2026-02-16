@@ -2,8 +2,9 @@
 // Language selection screen with Dropdown UI
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Modal, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, FlatList, Dimensions, Platform } from 'react-native';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import shared from '../styles/style';
 import { useLanguage } from '../context/LanguageContext';
 
 const languages = [
@@ -96,19 +97,14 @@ const LanguageScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
-
-      {/* Dropdown Modal */}
-      <Modal
-        visible={isDropdownOpen}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setIsDropdownOpen(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setIsDropdownOpen(false)}
-        >
+      {/* Dropdown Overlay - uses absolute positioning instead of Modal to stay within the app container on web */}
+      {isDropdownOpen && (
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={StyleSheet.absoluteFill}
+            activeOpacity={1}
+            onPress={() => setIsDropdownOpen(false)}
+          />
           <View style={styles.dropdownModal}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t('select_language')}</Text>
@@ -120,42 +116,28 @@ const LanguageScreen = ({ navigation }) => {
               data={languages}
               renderItem={renderDropdownItem}
               keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
+              showsVerticalScrollIndicator={true}
+              style={styles.flatListContainer}
               contentContainerStyle={styles.dropdownList}
             />
           </View>
-        </TouchableOpacity>
-      </Modal>
+        </View>
+      )}
 
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  content: {
-    flex: 1,
-    padding: SPACING.xl,
-    justifyContent: 'space-between',
-  },
+  container: shared.screenContainer,
+  content: shared.contentPadded,
   header: {
     marginTop: SPACING.xl,
     alignItems: 'center',
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-    marginBottom: SPACING.md,
-    textAlign: 'center',
-  },
+  title: shared.screenTitleLarge,
   subtitle: {
-    fontSize: FONTS.sizes.md,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
+    ...shared.screenSubtitle,
     marginBottom: SPACING.xs,
   },
   subtitleHindi: {
@@ -169,10 +151,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   label: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.sm,
+    ...shared.fieldLabel,
     marginLeft: SPACING.xs,
   },
   dropdownTrigger: {
@@ -206,29 +185,29 @@ const styles = StyleSheet.create({
   footer: {
     marginBottom: SPACING.xl,
   },
-  continueButton: {
-    backgroundColor: COLORS.primary,
-    padding: SPACING.lg,
-    borderRadius: RADIUS.lg,
-    alignItems: 'center',
-    ...SHADOWS.md,
-  },
-  continueText: {
-    color: COLORS.textLight,
-    fontSize: FONTS.sizes.lg,
-    fontWeight: 'bold',
-  },
+  continueButton: shared.primaryButton,
+  continueText: shared.primaryButtonText,
   // Modal Styles
   modalOverlay: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
+    alignItems: 'center',
     padding: SPACING.xl,
+    zIndex: 999,
   },
   dropdownModal: {
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.lg,
-    maxHeight: '70%',
+    maxHeight: Dimensions.get('window').height * 0.6,
+    overflow: 'hidden',
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 480,
     ...SHADOWS.lg,
   },
   modalHeader: {
@@ -248,6 +227,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: COLORS.textSecondary,
     padding: SPACING.xs,
+  },
+  flatListContainer: {
+    flexShrink: 1,
   },
   dropdownList: {
     padding: SPACING.sm,

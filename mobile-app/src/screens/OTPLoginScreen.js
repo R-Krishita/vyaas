@@ -1,5 +1,6 @@
 // mobile-app/src/screens/OTPLoginScreen.js
 // Phone number input screen for OTP login
+// 🔧 DEV MODE: Hardcoded to pass through without backend
 
 import React, { useState } from "react";
 import {
@@ -9,43 +10,32 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
-  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { sendOtp } from "../services/authApi";
+import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import shared from '../styles/style';
 
 export default function OTPLoginScreen() {
   const navigation = useNavigation();
   const [phone, setPhone] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const formatPhone = (text) => {
-    // Remove non-digits
     const digits = text.replace(/\D/g, "");
-    // Format: keep only digits, max 10
     return digits.slice(0, 10);
   };
 
-  const handleSendOtp = async () => {
+  const handleLogin = () => {
     const cleanPhone = phone.replace(/\D/g, "");
     if (cleanPhone.length < 10) {
       Alert.alert("Invalid", "Please enter a valid 10-digit phone number");
       return;
     }
 
-    const fullPhone = `+91${cleanPhone}`;
-    setLoading(true);
-
-    try {
-      const response = await sendOtp(fullPhone);
-      if (response.success) {
-        navigation.navigate("OTPVerification", { phone: fullPhone });
-      }
-    } catch (error) {
-      Alert.alert("Error", error.message || "Failed to send OTP. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    // 🔧 DEV MODE: Skip OTP, go directly to main app
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "MainTabs" }],
+    });
   };
 
   return (
@@ -53,7 +43,7 @@ export default function OTPLoginScreen() {
       <Text style={styles.emoji}>🌿</Text>
       <Text style={styles.title}>Welcome to VYAAS</Text>
       <Text style={styles.subtitle}>
-        Enter your phone number to receive an OTP
+        Enter your phone number to continue
       </Text>
 
       <View style={styles.inputContainer}>
@@ -69,20 +59,12 @@ export default function OTPLoginScreen() {
         />
       </View>
 
-      <TouchableOpacity
-        style={[styles.button, loading && styles.buttonDisabled]}
-        onPress={handleSendOtp}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Send OTP</Text>
-        )}
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>Continue</Text>
       </TouchableOpacity>
 
-      <Text style={styles.disclaimer}>
-        By continuing, you agree to our Terms of Service and Privacy Policy
+      <Text style={styles.devNote}>
+        🔧 Dev Mode: Any 10+ digit number will work
       </Text>
     </View>
   );
@@ -90,74 +72,55 @@ export default function OTPLoginScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 24,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
+    ...shared.centeredContainer,
+    backgroundColor: COLORS.surface,
   },
   emoji: {
     fontSize: 64,
-    marginBottom: 16,
+    marginBottom: SPACING.md,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#2E7D32",
-    marginBottom: 8,
+    ...shared.screenTitleLarge,
+    marginBottom: SPACING.sm,
   },
   subtitle: {
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
+    ...shared.screenSubtitle,
     marginBottom: 40,
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "#ddd",
-    borderRadius: 12,
-    paddingHorizontal: 16,
+    borderColor: COLORS.border,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: SPACING.md,
     width: "100%",
-    marginBottom: 24,
+    marginBottom: SPACING.lg,
   },
   countryCode: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#333",
-    marginRight: 8,
-    paddingRight: 8,
+    color: COLORS.textPrimary,
+    marginRight: SPACING.sm,
+    paddingRight: SPACING.sm,
     borderRightWidth: 1,
-    borderRightColor: "#ddd",
+    borderRightColor: COLORS.border,
   },
   input: {
     flex: 1,
     fontSize: 18,
-    paddingVertical: 16,
-    color: "#333",
+    paddingVertical: SPACING.md,
+    color: COLORS.textPrimary,
   },
   button: {
-    backgroundColor: "#2E7D32",
-    paddingVertical: 16,
-    paddingHorizontal: 48,
-    borderRadius: 12,
+    ...shared.primaryButton,
     width: "100%",
-    alignItems: "center",
   },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  disclaimer: {
-    marginTop: 24,
-    fontSize: 12,
-    color: "#999",
-    textAlign: "center",
-    paddingHorizontal: 20,
+  buttonText: shared.primaryButtonText,
+  devNote: {
+    marginTop: SPACING.lg,
+    fontSize: FONTS.sizes.xs,
+    color: COLORS.textMuted,
+    fontStyle: "italic",
   },
 });

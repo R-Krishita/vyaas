@@ -13,6 +13,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import shared from '../styles/style';
 import { marketAPI } from '../services/api';
 
 const MarketInsightsScreen = ({ route, navigation }) => {
@@ -187,25 +188,10 @@ const MarketInsightsScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.background,
-  },
-  loadingText: {
-    marginTop: SPACING.md,
-    fontSize: FONTS.sizes.md,
-    color: COLORS.textSecondary,
-  },
-  scrollView: {
-    flex: 1,
-    padding: SPACING.lg,
-  },
+  container: shared.screenContainer,
+  loadingContainer: shared.loadingContainer,
+  loadingText: shared.loadingText,
+  scrollView: shared.scrollView,
   header: {
     alignItems: 'center',
     marginBottom: SPACING.md,
@@ -214,14 +200,10 @@ const styles = StyleSheet.create({
     fontSize: 48,
   },
   title: {
-    fontSize: FONTS.sizes.xl,
-    fontWeight: 'bold',
-    color: COLORS.primary,
+    ...shared.screenTitle,
+    textAlign: undefined,
   },
-  subtitle: {
-    fontSize: FONTS.sizes.md,
-    color: COLORS.textSecondary,
-  },
+  subtitle: shared.screenSubtitle,
   sourceBadge: {
     backgroundColor: '#E3F2FD',
     padding: SPACING.sm,
