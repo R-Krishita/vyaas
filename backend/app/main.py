@@ -4,7 +4,8 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import market_router, chatbot_router, farm_router, ml_router
+from app.routers import market_router, farm_router, ml_router
+from app.routers.auth import router as auth_router
 from app.config import get_settings
 
 # Initialize FastAPI app
@@ -38,9 +39,9 @@ app.add_middleware(
 
 # Include routers
 app.include_router(market_router)
-app.include_router(chatbot_router)
 app.include_router(farm_router.router)
 app.include_router(ml_router.router)
+app.include_router(auth_router)
 
 
 @app.get("/")
@@ -69,28 +70,6 @@ async def health_check():
         "api_key_configured": bool(settings.data_gov_api_key and settings.data_gov_api_key != "your_api_key_here"),
         "data_source": "data.gov.in"
     }
-
-
-# Placeholder endpoints for future features
-from pydantic import BaseModel
-
-class OTPRequest(BaseModel):
-    phone: str
-
-class OTPVerifyRequest(BaseModel):
-    phone: str
-    otp: str
-
-@app.post("/api/auth/otp")
-async def send_otp(request: OTPRequest):
-    """Send OTP for login (placeholder)."""
-    return {"success": True, "message": "OTP sent", "phone": request.phone}
-
-
-@app.post("/api/auth/verify")
-async def verify_otp(request: OTPVerifyRequest):
-    """Verify OTP (placeholder)."""
-    return {"success": True, "token": "placeholder_jwt_token", "farmer_id": "F001"}
 
 
 
