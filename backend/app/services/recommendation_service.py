@@ -11,10 +11,39 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(_
 MODEL_PATH = os.path.join(PROJECT_ROOT, "dataset", "crop_recommendation_model.pkl")
 ENCODER_PATH = os.path.join(PROJECT_ROOT, "dataset", "label_encoders.pkl")
 
+# Emoji mapping for crops by name
+CROP_ICONS = {
+    # Ayurvedic
+    "Kalmegh": "🌿", "Pashanbheda": "🪨", "Mandookparni": "🍀", "Bhringaraja": "🌼",
+    "Vidanga": "🫐", "Kapikachu": "🫘", "Pippali": "🌶️", "Rasna": "🌾",
+    "Kantakari": "🌵", "Ashwagandha": "🌱", "Vach": "🪴", "Bael": "🍈",
+    "Aloe Vera": "🪴", "Shatavari": "🌿", "Neem": "🌳", "Brahmi": "🍃",
+    "Daruhaldi": "🟡", "Punarnava": "🌸", "Senna": "🍂", "Guggul": "🪵",
+    "Amla": "🫒", "Kokum": "🍇", "Gudmar": "🌿", "Nagakeshar": "🌺",
+    "Jatamansi": "💐", "Tulsi": "🌿", "Kutki": "🌱", "Isabgol": "🌾",
+    "Sarpgandha": "🐍", "Safed Musli": "🥬",
+    # Cereal
+    "Rice": "🌾", "Wheat": "🌾", "Maize": "🌽", "Pearl Millet": "🌾",
+    "Sorghum": "🌾", "Finger Millet": "🌾",
+    # Pulse
+    "Chickpea": "🫘", "Pigeon Pea": "🫛", "Green Gram": "🫛", "Black Gram": "🫘",
+    "Lentil": "🫘", "Kidney Bean": "🫘",
+    # Oilseed
+    "Soybean": "🫘", "Groundnut": "🥜", "Mustard": "🌻", "Sunflower": "🌻",
+    # Cash Crop
+    "Cotton": "☁️", "Jute": "🧶", "Sugarcane": "🎋",
+    # Vegetable
+    "Potato": "🥔", "Tomato": "🍅", "Brinjal": "🍆", "Okra": "🫑",
+    "Cabbage": "🥬", "Cauliflower": "🥦",
+    # Fruit
+    "Mango": "🥭", "Banana": "🍌", "Guava": "🍐", "Papaya": "🍈", "Grapes": "🍇",
+}
+
 class RecommendationService:
     def __init__(self):
         self.model = None
         self.encoders = None
+        self.target_encoder = None
         self._load_model()
 
     def _load_model(self):
@@ -23,6 +52,7 @@ class RecommendationService:
             if os.path.exists(MODEL_PATH) and os.path.exists(ENCODER_PATH):
                 self.model = joblib.load(MODEL_PATH)
                 self.encoders = joblib.load(ENCODER_PATH)
+                self.target_encoder = self.encoders.get('target')
                 print("[OK] ML Model loaded successfully")
             else:
                 print(f"[WARN] Model files not found at {MODEL_PATH}")
@@ -72,23 +102,47 @@ class RecommendationService:
             top_indices = np.argsort(probs)[-top_k:][::-1]
             classes = self.model.classes_
             
+            # Normalize top-K scores so they sum to 100%
+            raw_scores = [probs[idx] for idx in top_indices]
+            total = sum(raw_scores)
+            normalized = [(s / total) * 100 if total > 0 else 0 for s in raw_scores]
+            
             recommendations = []
-            for rank, idx in enumerate(top_indices):
-                crop_name = str(classes[idx])  # Ensure string
-                score = float(round(probs[idx] * 100, 1))  # Convert numpy.float64 to Python float
+            for rank, (idx, norm_score) in enumerate(zip(top_indices, normalized)):
+                # Decode the numeric class index back to the actual crop name
+                if self.target_encoder is not None:
+                    crop_name = str(self.target_encoder.inverse_transform([classes[idx]])[0])
+                else:
+                    crop_name = str(classes[idx])
+                    
+                score = float(round(norm_score, 1))
+                
+                # Assign confidence band based on normalized score
+                if score >= 50:
+                    confidence_band = "Strongly Suitable"
+                elif score >= 40:
+                    confidence_band = "Suitable"
+                elif score >= 25:
+                    confidence_band = "Moderately Suitable"
+                else:
+                    confidence_band = "Low Suitability"
                 
                 # Mock profit estimate (since we don't have this in the model output yet)
                 # In refined version, we could look this up from crop_economics.csv
                 profit_estimate = int((score * 500) + (input_dict['budget'][0] * 0.2))  # Ensure Python int
+                
+                # Get a relevant emoji icon for the crop, fallback to generic plant
+                icon = CROP_ICONS.get(crop_name, "🌱")
                 
                 recommendations.append({
                     "rank": int(rank + 1),
                     "crop_name": crop_name,
                     "crop_name_hi": crop_name, # Placeholder for translation
                     "match_score": score,
+                    "confidence_band": confidence_band,
                     "profit_estimate": profit_estimate,
                     "reasons": ["Suitable for your soil", "Good market potential"],
-                    "icon": "[plant]"
+                    "icon": icon,
                 })
                 
             return recommendations
