@@ -52,6 +52,17 @@ const demoRecommendations = [
 
 const medals = ['🥇', '🥈', '🥉'];
 
+// Confidence band colors matching the farmer-friendly bands
+const getBandColor = (band) => {
+  switch (band) {
+    case 'Strongly Suitable': return '#4CAF50';
+    case 'Suitable': return '#FFC107';
+    case 'Moderately Suitable': return '#FF9800';
+    case 'Low Suitability': return '#F44336';
+    default: return COLORS.textMuted;
+  }
+};
+
 const RecommendationsScreen = ({ navigation }) => {
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -106,17 +117,25 @@ const RecommendationsScreen = ({ navigation }) => {
               </View>
             </View>
 
-            {/* Match Score Bar */}
+            {/* Match Score with Confidence Band */}
             <View style={styles.scoreSection}>
               <View style={styles.scoreBar}>
                 <View 
                   style={[
                     styles.scoreFill, 
-                    { width: `${crop.match_score}%` }
+                    { width: `${crop.match_score}%`, backgroundColor: getBandColor(crop.confidence_band) }
                   ]} 
                 />
               </View>
-              <Text style={styles.scoreText}>{crop.match_score}% Match</Text>
+              <Text style={[styles.scoreText, { color: getBandColor(crop.confidence_band) }]}>
+                {crop.match_score}% Match
+              </Text>
+            </View>
+            <View style={styles.bandRow}>
+              <View style={[styles.bandDot, { backgroundColor: getBandColor(crop.confidence_band) }]} />
+              <Text style={[styles.bandLabel, { color: getBandColor(crop.confidence_band) }]}>
+                {crop.confidence_band || 'Suitable'}
+              </Text>
             </View>
 
             {/* Profit Estimate */}
@@ -224,7 +243,21 @@ const styles = StyleSheet.create({
   scoreText: {
     fontSize: FONTS.sizes.md,
     fontWeight: 'bold',
-    color: COLORS.success,
+  },
+  bandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  bandDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: SPACING.xs,
+  },
+  bandLabel: {
+    fontSize: FONTS.sizes.sm,
+    fontWeight: '600',
   },
   profitRow: {
     flexDirection: 'row',
