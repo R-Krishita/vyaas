@@ -63,9 +63,9 @@ export default function OTPLoginScreen() {
         <Text style={styles.buttonText}>Continue</Text>
       </TouchableOpacity>
 
-      <Text style={styles.devNote}>
+      {/* <Text style={styles.devNote}>
         🔧 Dev Mode: Any 10+ digit number will work
-      </Text>
+      </Text> */}
     </View>
   );
 }
