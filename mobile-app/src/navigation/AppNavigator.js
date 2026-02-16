@@ -75,6 +75,11 @@ const HomeStackScreen = () => (
       component={CultivationPlanScreen}
       options={{ headerTitle: '📋 Cultivation Plan' }}
     />
+    <HomeStack.Screen
+      name="Recommendations"
+      component={RecommendationsScreen}
+      options={{ headerTitle: '🌾 Recommendations' }}
+    />
 
   </HomeStack.Navigator>
 );

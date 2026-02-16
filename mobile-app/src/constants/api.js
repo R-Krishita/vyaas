@@ -12,7 +12,7 @@ const envBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 // - Android emulator: 10.0.2.2 (maps to host machine localhost)
 // - iOS simulator / Web: localhost
 const defaultHost = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
-export const API_BASE_URL = envBaseUrl || `http://${defaultHost}:8001`;
+export const API_BASE_URL = envBaseUrl || `http://${defaultHost}:8000`;
 
 export const API_ENDPOINTS = {
   // Auth
@@ -31,9 +31,6 @@ export const API_ENDPOINTS = {
   getPriceHistory: '/api/market/prices/history',
   getBestMandis: '/api/market/best-mandis',
   getSupportedCrops: '/api/market/supported-crops',
-  
-  // Chatbot
-  chatbotAsk: '/api/chatbot/ask',
   
   // PDF
   generatePdf: '/api/plan/pdf',

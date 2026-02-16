@@ -16,7 +16,7 @@ import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import shared from '../styles/style';
 import { farmAPI } from '../services/api';
 
-const soilTypes = ['Black', 'Red', 'Alluvial', 'Laterite', 'Sandy', 'Clay'];
+const soilTypes = ['Black', 'Red', 'Alluvial', 'Laterite', 'Sandy', 'Clay','Loamy'];
 const waterSources = ['Well', 'Borewell', 'Canal', 'River', 'Rainwater'];
 const irrigationTypes = ['Drip', 'Sprinkler', 'Flood', 'Manual'];
 const seasons = ['Kharif', 'Rabi', 'Zaid'];
@@ -100,34 +100,56 @@ const FarmDetailsScreen = ({ navigation }) => {
     </View>
   );
 
-  const renderSlider = (label, icon, field, min, max, unit) => (
-    <View style={styles.fieldContainer}>
-      <Text style={styles.fieldLabel}>{icon} {label}: {formData[field]} {unit}</Text>
-      <View style={styles.sliderRow}>
-        <Text style={styles.sliderMin}>{min}</Text>
-        <View style={styles.sliderTrack}>
-          <View 
-            style={[
-              styles.sliderFill, 
-              { width: `${((parseFloat(formData[field]) - min) / (max - min)) * 100}%` }
-            ]} 
-          />
-        </View>
-        <Text style={styles.sliderMax}>{max}</Text>
-      </View>
-      <View style={styles.sliderButtons}>
-        {[min, (min + max) / 2, max].map((val) => (
+  const renderSlider = (label, icon, field, min, max, unit, stepSize = 1) => {
+    const currentVal = parseFloat(formData[field]) || min;
+
+    const adjustValue = (delta) => {
+      const newVal = Math.min(max, Math.max(min, currentVal + delta));
+      // Round to avoid floating point issues
+      const rounded = Math.round(newVal * 10) / 10;
+      updateField(field, rounded.toString());
+    };
+
+    const handleTextChange = (text) => {
+      // Allow empty string while typing
+      if (text === '' || text === '-') {
+        updateField(field, text);
+        return;
+      }
+      const num = parseFloat(text);
+      if (!isNaN(num)) {
+        const clamped = Math.min(max, Math.max(min, num));
+        updateField(field, clamped.toString());
+      }
+    };
+
+    return (
+      <View style={styles.fieldContainer}>
+        <Text style={styles.fieldLabel}>{icon} {label} ({min}–{max} {unit})</Text>
+        <View style={styles.stepperRow}>
           <TouchableOpacity
-            key={val}
-            style={styles.sliderButton}
-            onPress={() => updateField(field, val.toString())}
+            style={styles.stepperButton}
+            onPress={() => adjustValue(-stepSize)}
           >
-            <Text style={styles.sliderButtonText}>{val}</Text>
+            <Text style={styles.stepperButtonText}>−</Text>
           </TouchableOpacity>
-        ))}
+          <TextInput
+            style={styles.stepperInput}
+            value={formData[field]}
+            onChangeText={handleTextChange}
+            keyboardType="decimal-pad"
+            textAlign="center"
+          />
+          <TouchableOpacity
+            style={styles.stepperButton}
+            onPress={() => adjustValue(stepSize)}
+          >
+            <Text style={styles.stepperButtonText}>+</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -147,7 +169,7 @@ const FarmDetailsScreen = ({ navigation }) => {
             {renderInput('District', '📍', 'district', 'e.g., Pune')}
             {renderInput('Farm Size (Acres)', '📐', 'farmSize', 'e.g., 2.5', 'decimal-pad')}
             {renderDropdown('Soil Type', '🪨', soilTypes, 'soilType')}
-            {renderSlider('Soil pH', '🧪', 'soilPh', 4, 9, '')}
+            {renderSlider('Soil pH', '🧪', 'soilPh', 4, 9, '', 0.5)}
           </View>
         )}
 
@@ -158,6 +180,8 @@ const FarmDetailsScreen = ({ navigation }) => {
             {renderInput('Phosphorus (kg/ha)', '🧬', 'phosphorus', 'e.g., 40', 'number-pad')}
             {renderInput('Potassium (kg/ha)', '⚗️', 'potassium', 'e.g., 80', 'number-pad')}
             {renderInput('Annual Rainfall (mm)', '🌧️', 'rainfall', 'e.g., 800', 'number-pad')}
+            {renderInput('Temperature (°C)', '🌡️', 'temperature', 'e.g., 28', 'number-pad')}
+            {renderInput('Humidity (%)', '💧', 'humidity', 'e.g., 60', 'number-pad')}
             {renderDropdown('Water Source', '💧', waterSources, 'waterSource')}
             {renderDropdown('Irrigation Type', '🚿', irrigationTypes, 'irrigationType')}
           </View>
@@ -169,21 +193,6 @@ const FarmDetailsScreen = ({ navigation }) => {
             {renderDropdown('Current Season', '🗓️', seasons, 'season')}
             {renderInput('Previous Crop', '🌾', 'previousCrop', 'e.g., Wheat')}
             {renderInput('Budget (₹)', '💰', 'budget', 'e.g., 50000', 'number-pad')}
-            {renderInput('Labor Available', '👷', 'laborCount', 'e.g., 3', 'number-pad')}
-            {renderSlider('Sunlight Hours', '☀️', 'sunlightHours', 4, 12, 'hrs')}
-            
-            <TouchableOpacity
-              style={[
-                styles.toggleButton,
-                formData.organicPreference && styles.toggleButtonActive,
-              ]}
-              onPress={() => updateField('organicPreference', !formData.organicPreference)}
-            >
-              <Text style={styles.toggleIcon}>🌱</Text>
-              <Text style={styles.toggleText}>
-                Organic Farming: {formData.organicPreference ? 'Yes' : 'No'}
-              </Text>
-            </TouchableOpacity>
           </View>
         )}
       </ScrollView>
@@ -273,46 +282,36 @@ const styles = StyleSheet.create({
     color: COLORS.textLight,
     fontWeight: '600',
   },
-  sliderRow: {
+  stepperRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  sliderTrack: {
-    flex: 1,
-    height: 8,
-    backgroundColor: COLORS.border,
-    borderRadius: 4,
-    marginHorizontal: SPACING.sm,
-  },
-  sliderFill: {
-    height: '100%',
+  stepperButton: {
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.md,
     backgroundColor: COLORS.primary,
-    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  sliderMin: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
+  stepperButtonText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: COLORS.textLight,
   },
-  sliderMax: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
-  sliderButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: SPACING.sm,
-  },
-  sliderButton: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
+  stepperInput: {
+    width: 80,
+    marginHorizontal: SPACING.sm,
     backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.sm,
     borderWidth: 1,
     borderColor: COLORS.border,
-  },
-  sliderButtonText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
+    borderRadius: RADIUS.md,
+    paddingVertical: SPACING.xs,
+    paddingHorizontal: SPACING.sm,
+    fontSize: FONTS.sizes.md,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    textAlign: 'center',
   },
   toggleButton: {
     flexDirection: 'row',

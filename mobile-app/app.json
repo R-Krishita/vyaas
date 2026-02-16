@@ -1,6 +1,6 @@
 {
   "expo": {
-    "entryPoint": "mobile-app/App.js",
+    "entryPoint": "./App.js",
     "name": "Smart Ayurvedic Crop Advisor",
     "slug": "smart-ayurvedic-crop-advisor",
     "version": "1.0.0",
