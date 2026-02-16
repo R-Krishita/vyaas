@@ -22,6 +22,7 @@ const demoRecommendations = [
     crop_name: 'Tulsi',
     crop_name_hi: 'तुलसी',
     match_score: 92,
+    confidence_band: 'Strongly Suitable',
     profit_estimate: 45000,
     reasons: [
       'Suitable for your soil type',
@@ -35,6 +36,7 @@ const demoRecommendations = [
     crop_name: 'Ashwagandha',
     crop_name_hi: 'अश्वगंधा',
     match_score: 85,
+    confidence_band: 'Suitable',
     profit_estimate: 38000,
     reasons: ['High demand', 'Drought tolerant'],
     icon: '🌱',
@@ -44,6 +46,7 @@ const demoRecommendations = [
     crop_name: 'Turmeric',
     crop_name_hi: 'हल्दी',
     match_score: 78,
+    confidence_band: 'Moderately Suitable',
     profit_estimate: 32000,
     reasons: ['Traditional knowledge', 'Easy cultivation'],
     icon: '🟡',
@@ -117,20 +120,7 @@ const RecommendationsScreen = ({ navigation }) => {
               </View>
             </View>
 
-            {/* Match Score with Confidence Band */}
-            <View style={styles.scoreSection}>
-              <View style={styles.scoreBar}>
-                <View 
-                  style={[
-                    styles.scoreFill, 
-                    { width: `${crop.match_score}%`, backgroundColor: getBandColor(crop.confidence_band) }
-                  ]} 
-                />
-              </View>
-              <Text style={[styles.scoreText, { color: getBandColor(crop.confidence_band) }]}>
-                {crop.match_score}% Match
-              </Text>
-            </View>
+            {/* Confidence Band */}
             <View style={styles.bandRow}>
               <View style={[styles.bandDot, { backgroundColor: getBandColor(crop.confidence_band) }]} />
               <Text style={[styles.bandLabel, { color: getBandColor(crop.confidence_band) }]}>
@@ -222,28 +212,7 @@ const styles = StyleSheet.create({
   cropIcon: {
     fontSize: 28,
   },
-  scoreSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: SPACING.md,
-  },
-  scoreBar: {
-    flex: 1,
-    height: 12,
-    backgroundColor: COLORS.borderLight,
-    borderRadius: 6,
-    marginRight: SPACING.md,
-    overflow: 'hidden',
-  },
-  scoreFill: {
-    height: '100%',
-    backgroundColor: COLORS.success,
-    borderRadius: 6,
-  },
-  scoreText: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: 'bold',
-  },
+
   bandRow: {
     flexDirection: 'row',
     alignItems: 'center',
