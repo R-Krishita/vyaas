@@ -71,11 +71,6 @@ export const marketAPI = {
   getSupportedCrops: () => apiClient.get(API_ENDPOINTS.getSupportedCrops),
 };
 
-// Chatbot API
-export const chatbotAPI = {
-  askQuestion: (message, farmerId = null, context = null) => 
-    apiClient.post(API_ENDPOINTS.chatbotAsk, { message, farmer_id: farmerId, context }),
-};
 
 // PDF API
 export const pdfAPI = {
