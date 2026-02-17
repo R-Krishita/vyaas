@@ -147,7 +147,7 @@ cd vyaas
 
 ### 2. Backend Setup (`/backend`)
 
-The backend is a **FastAPI** server that serves the ML model, market prices, and chatbot.
+The backend is a **FastAPI** server that serves the ML model, market prices.
 
 #### a) Create & activate a virtual environment
 
