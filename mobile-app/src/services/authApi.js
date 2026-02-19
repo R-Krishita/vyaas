@@ -1,19 +1,8 @@
 // mobile-app/src/services/authApi.js
-// API service for OTP authentication
-// TODO: Update BASE_URL after backend is running
+// API service for OTP authentication — uses the shared API client
 
-import axios from 'axios';
-
-// ⚠️ UPDATE THIS URL to match your backend
-const BASE_URL = 'http://192.168.1.X:8001/api'; // Replace with your backend IP
-
-const authApi = axios.create({
-  baseURL: BASE_URL,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+import apiClient from './api';
+import { API_ENDPOINTS } from '../constants/api';
 
 /**
  * Send OTP to phone number
@@ -22,11 +11,11 @@ const authApi = axios.create({
  */
 export const sendOtp = async (phone) => {
   try {
-    const response = await authApi.post('/auth/otp', { phone });
-    return response.data;
+    const response = await apiClient.post(API_ENDPOINTS.sendOtp, { phone });
+    return response; // apiClient interceptor already returns response.data
   } catch (error) {
     console.error('Send OTP Error:', error);
-    throw error.response?.data || { message: 'Failed to send OTP' };
+    throw error.response?.data || error.data || { message: 'Failed to send OTP' };
   }
 };
 
@@ -38,12 +27,12 @@ export const sendOtp = async (phone) => {
  */
 export const verifyOtp = async (phone, otp) => {
   try {
-    const response = await authApi.post('/auth/verify', { phone, otp });
-    return response.data;
+    const response = await apiClient.post(API_ENDPOINTS.verifyOtp, { phone, otp });
+    return response; // apiClient interceptor already returns response.data
   } catch (error) {
     console.error('Verify OTP Error:', error);
-    throw error.response?.data || { message: 'Invalid OTP' };
+    throw error.response?.data || error.data || { message: 'Invalid OTP' };
   }
 };
 
-export default authApi;
+export default { sendOtp, verifyOtp };

@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { verifyOtp } from "../services/authApi";
+import { sendOtp, verifyOtp } from "../services/authApi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
 import shared from '../styles/style';
@@ -94,11 +94,15 @@ export default function OTPVerificationScreen() {
     }
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
     if (timer > 0) return;
-    // TODO: Call sendOtp again
-    setTimer(30);
-    Alert.alert("OTP Sent", "A new OTP has been sent to your phone.");
+    try {
+      await sendOtp(phone);
+      setTimer(30);
+      Alert.alert("OTP Sent", "A new OTP has been sent to your phone.");
+    } catch (error) {
+      Alert.alert("Error", error.message || "Failed to resend OTP.");
+    }
   };
 
   return (

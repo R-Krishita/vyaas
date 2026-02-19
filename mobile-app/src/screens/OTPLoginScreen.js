@@ -1,6 +1,5 @@
 // mobile-app/src/screens/OTPLoginScreen.js
 // Phone number input screen for OTP login
-// 🔧 DEV MODE: Hardcoded to pass through without backend
 
 import React, { useState } from "react";
 import {
@@ -10,36 +9,48 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
 import shared from '../styles/style';
+import ScreenWrapper from '../components/ScreenWrapper';
+import { sendOtp } from '../services/authApi';
 
 export default function OTPLoginScreen() {
   const navigation = useNavigation();
   const [phone, setPhone] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const formatPhone = (text) => {
     const digits = text.replace(/\D/g, "");
     return digits.slice(0, 10);
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     const cleanPhone = phone.replace(/\D/g, "");
     if (cleanPhone.length < 10) {
       Alert.alert("Invalid", "Please enter a valid 10-digit phone number");
       return;
     }
 
-    // 🔧 DEV MODE: Skip OTP, go directly to main app
-    navigation.reset({
-      index: 0,
-      routes: [{ name: "MainTabs" }],
-    });
+    const fullPhone = `+91${cleanPhone}`;
+    setLoading(true);
+    try {
+      await sendOtp(fullPhone);
+      navigation.navigate("OTPVerification", { phone: fullPhone });
+    } catch (error) {
+      Alert.alert(
+        "Error",
+        error.message || error.detail || "Failed to send OTP. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <View style={styles.container}>
+    <ScreenWrapper style={styles.container}>
       <Text style={styles.emoji}>🌿</Text>
       <Text style={styles.title}>Welcome to VYAAS</Text>
       <Text style={styles.subtitle}>
@@ -56,23 +67,31 @@ export default function OTPLoginScreen() {
           onChangeText={(text) => setPhone(formatPhone(text))}
           keyboardType="phone-pad"
           maxLength={10}
+          editable={!loading}
         />
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Continue</Text>
+      <TouchableOpacity
+        style={[styles.button, loading && styles.buttonDisabled]}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Continue</Text>
+        )}
       </TouchableOpacity>
-
-      {/* <Text style={styles.devNote}>
-        🔧 Dev Mode: Any 10+ digit number will work
-      </Text> */}
-    </View>
+    </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    ...shared.centeredContainer,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.lg,
     backgroundColor: COLORS.surface,
   },
   emoji: {
@@ -116,11 +135,6 @@ const styles = StyleSheet.create({
     ...shared.primaryButton,
     width: "100%",
   },
+  buttonDisabled: shared.buttonDisabled,
   buttonText: shared.primaryButtonText,
-  devNote: {
-    marginTop: SPACING.lg,
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    fontStyle: "italic",
-  },
 });
