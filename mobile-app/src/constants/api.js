@@ -3,16 +3,26 @@
 
 import { Platform } from 'react-native';
 
-// Prefer configuring via Expo public env var:
-// - PowerShell: $env:EXPO_PUBLIC_API_BASE_URL="http://192.168.1.34:8000"; npm start
-// - Cmd: set EXPO_PUBLIC_API_BASE_URL=http://192.168.1.34:8000 && npm start
-const envBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+// Your dev machine's LAN IP (same as the one shown in Expo QR code)
+// Update this if your IP changes, or set EXPO_PUBLIC_API_BASE_URL env var
+const DEV_MACHINE_IP = '192.168.1.33';
 
-// Sensible dev defaults:
-// - Android emulator: 10.0.2.2 (maps to host machine localhost)
-// - iOS simulator / Web: localhost
-const defaultHost = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
-export const API_BASE_URL = envBaseUrl || `http://${defaultHost}:8000`;
+// Temporary tunnel URL for Android (bypass firewall)
+const TUNNEL_URL = 'https://giant-deer-dress.loca.lt';
+
+const getDevBaseUrl = () => {
+  // On web, localhost works fine.
+  if (Platform.OS === 'web') return 'http://localhost:8000';
+  
+  // on Android/iOS, use tunnel if available, else LAN IP
+  return TUNNEL_URL || `http://${DEV_MACHINE_IP}:8000`;
+};
+
+// Use env var if set (for production), otherwise use dev default
+const envBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+export const API_BASE_URL = envBaseUrl || getDevBaseUrl();
+
+console.log('[VYAAS] API_BASE_URL =', API_BASE_URL);
 
 export const API_ENDPOINTS = {
   // Auth

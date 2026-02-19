@@ -8,11 +8,13 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
 } from 'react-native';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import shared from '../styles/style';
 import HeroCarousel from '../components/HeroCarousel';
+import ScreenWrapper from '../components/ScreenWrapper';
+import Card from '../components/Card';
+import SectionHeader from '../components/SectionHeader';
 
 const actionCards = [
   {
@@ -60,7 +62,7 @@ const HomeScreen = ({ navigation }) => {
 
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenWrapper style={styles.container}>
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -83,19 +85,18 @@ const HomeScreen = ({ navigation }) => {
         <HeroCarousel />
 
         {/* Action Cards */}
-        <Text style={styles.sectionTitle}>What would you like to do?</Text>
+        <SectionHeader title="What would you like to do?" />
         <View style={styles.cardsGrid}>
           {actionCards.map((card) => (
-            <TouchableOpacity
+            <Card
               key={card.id}
               style={styles.card}
               onPress={() => handleCardPress(card.screen)}
-              activeOpacity={0.7}
             >
               <Text style={styles.cardIcon}>{card.icon}</Text>
               <Text style={styles.cardTitle}>{card.title}</Text>
               <Text style={styles.cardSubtitle}>{card.subtitle}</Text>
-            </TouchableOpacity>
+            </Card>
           ))}
         </View>
 
@@ -118,7 +119,7 @@ const HomeScreen = ({ navigation }) => {
         </View>
       </ScrollView>
 
-    </SafeAreaView>
+    </ScreenWrapper>
   );
 };
 

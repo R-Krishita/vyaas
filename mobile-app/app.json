@@ -9,10 +9,14 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.smartayurvediccropadvisor"
+      "bundleIdentifier": "com.smartayurvediccropadvisor",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "VYAAS uses your location to auto-detect your state and district for crop recommendations."
+      }
     },
     "android": {
-      "package": "com.smartayurvediccropadvisor"
+      "package": "com.smartayurvediccropadvisor",
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
     }
   }
 }
