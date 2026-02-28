@@ -1,6 +1,6 @@
 # 🌿 Vyaas — Smart Ayurvedic Crop Advisor
 
-**Vyaas** is an AI-powered agricultural platform that helps Indian farmers choose the best crops for their land. It combines a **machine learning engine** trained on 60+ crops with **real-time market prices** and **AI-powered chat assistance** to deliver personalized recommendations — with a special focus on high-value Ayurvedic crops like Tulsi, Ashwagandha, and Turmeric.
+**Vyaas** is an AI-powered agricultural platform that helps Indian farmers choose the best ayurvedic crops for their land. It combines a **machine learning engine** trained on 60+ crops with **real-time market prices** and **AI-powered chat assistance** to deliver personalized recommendations — with a special focus on high-value Ayurvedic crops like Tulsi, Ashwagandha, and Turmeric.
 
 ---
 
