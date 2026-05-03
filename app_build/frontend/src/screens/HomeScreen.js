@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import shared from '../styles/style';
-import HeroCarousel from '../components/HeroCarousel';
 import ScreenWrapper from '../components/ScreenWrapper';
 import Card from '../components/Card';
 import SectionHeader from '../components/SectionHeader';
@@ -80,9 +79,6 @@ const HomeScreen = ({ navigation }) => {
             <Text style={styles.profileIcon}>👤</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Hero Carousel */}
-        <HeroCarousel />
 
         {/* Action Cards */}
         <SectionHeader title="What would you like to do?" />

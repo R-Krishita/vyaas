@@ -11,7 +11,7 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
-import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
+import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 
 const PickerInput = ({
   label,
@@ -95,6 +95,7 @@ const PickerInput = ({
 const styles = StyleSheet.create({
   container: {
     marginBottom: SPACING.lg,
+    marginHorizontal: SPACING.xs,
   },
   label: {
     fontSize: FONTS.sizes.md,
@@ -111,7 +112,8 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     borderRadius: RADIUS.md,
     paddingVertical: SPACING.md,
-    paddingHorizontal: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    ...SHADOWS.sm,
   },
   inputOpen: {
     borderColor: COLORS.primary,

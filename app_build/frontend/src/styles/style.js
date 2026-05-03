@@ -12,11 +12,13 @@ const shared = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    padding: SPACING.lg,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.xl,
   },
   contentPadded: {
     flex: 1,
-    padding: SPACING.xl,
+    paddingVertical: SPACING.xl,
+    paddingHorizontal: SPACING.xl,
     justifyContent: 'space-between',
   },
   centeredContainer: {

@@ -75,7 +75,10 @@ const styles = StyleSheet.create({
         width: '100%',
         marginBottom: SPACING.xl,
     },
-    loginButton: shared.primaryButton,
+    loginButton: {
+        ...shared.primaryButton,
+        marginBottom: SPACING.md,
+    },
     loginButtonText: shared.primaryButtonText,
     signupButton: shared.outlineButton,
     signupButtonText: shared.outlineButtonText,

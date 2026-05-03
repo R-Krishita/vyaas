@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
-import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
+import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 
 const FormInput = ({
   label,
@@ -30,6 +30,7 @@ const FormInput = ({
 const styles = StyleSheet.create({
   container: {
     marginBottom: SPACING.lg,
+    marginHorizontal: SPACING.xs,
   },
   label: {
     fontSize: FONTS.sizes.md,
@@ -39,12 +40,14 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: COLORS.surface,
-    padding: SPACING.md,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
     borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: COLORS.border,
     fontSize: FONTS.sizes.md,
     color: COLORS.textPrimary,
+    ...SHADOWS.sm,
   },
 });
 

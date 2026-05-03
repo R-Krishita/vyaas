@@ -12,17 +12,6 @@ const apiClient = axios.create({
   },
 });
 
-// Auth token interceptor
-apiClient.interceptors.request.use(
-  (config) => {
-    // Add auth token if available
-    // const token = await AsyncStorage.getItem('token');
-    // if (token) config.headers.Authorization = `Bearer ${token}`;
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => response.data,
@@ -48,6 +37,8 @@ export const farmAPI = {
 export const recommendAPI = {
   getCropRecommendations: (farmId) => 
     apiClient.post(API_ENDPOINTS.getRecommendations, { farm_id: farmId }),
+  getCropDetails: (crops) => 
+    apiClient.get(`/api/ml/crop-details?crop=${crops.join(',')}`),
 };
 
 // Market APIs - Real Mandi prices from data.gov.in
@@ -61,6 +52,9 @@ export const marketAPI = {
   
   getPriceHistory: (crop, days = 30) => 
     apiClient.get(`${API_ENDPOINTS.getPriceHistory}?crop=${crop}&days=${days}`),
+    
+  getHarvestPrediction: (crop, growthDays, currentPrice) => 
+    apiClient.get(`/api/market/predict-harvest?crop=${crop}&growth_days=${growthDays}&current_price=${currentPrice}`),
   
   getBestMandis: (crop, state = null) => {
     let url = `${API_ENDPOINTS.getBestMandis}?crop=${crop}`;

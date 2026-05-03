@@ -73,6 +73,7 @@ const StepperInput = ({
 const styles = StyleSheet.create({
   container: {
     marginBottom: SPACING.lg,
+    marginHorizontal: SPACING.xs,
   },
   label: {
     fontSize: FONTS.sizes.md,

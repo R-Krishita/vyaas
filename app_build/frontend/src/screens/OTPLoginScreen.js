@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
+import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import shared from '../styles/style';
 import ScreenWrapper from '../components/ScreenWrapper';
 import { sendOtp } from '../services/authApi';
@@ -50,48 +50,50 @@ export default function OTPLoginScreen() {
   };
 
   return (
-    <ScreenWrapper style={styles.container}>
-      <Text style={styles.emoji}>🌿</Text>
-      <Text style={styles.title}>Welcome to VYAAS</Text>
-      <Text style={styles.subtitle}>
-        Enter your phone number to continue
-      </Text>
+    <ScreenWrapper>
+      <View style={styles.content}>
+        <Text style={styles.emoji}>🌿</Text>
+        <Text style={styles.title}>Welcome to VYAAS</Text>
+        <Text style={styles.subtitle}>
+          Enter your phone number to continue
+        </Text>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.countryCode}>+91</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter phone number"
-          placeholderTextColor="#999"
-          value={phone}
-          onChangeText={(text) => setPhone(formatPhone(text))}
-          keyboardType="phone-pad"
-          maxLength={10}
-          editable={!loading}
-        />
+        <View style={styles.inputContainer}>
+          <Text style={styles.countryCode}>+91</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter phone number"
+            placeholderTextColor="#999"
+            value={phone}
+            onChangeText={(text) => setPhone(formatPhone(text))}
+            keyboardType="phone-pad"
+            maxLength={10}
+            editable={!loading}
+          />
+        </View>
+
+        <TouchableOpacity
+          style={[styles.button, loading && styles.buttonDisabled]}
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Continue</Text>
+          )}
+        </TouchableOpacity>
       </View>
-
-      <TouchableOpacity
-        style={[styles.button, loading && styles.buttonDisabled]}
-        onPress={handleLogin}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Continue</Text>
-        )}
-      </TouchableOpacity>
     </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: SPACING.lg,
+    paddingHorizontal: SPACING.xl,
     backgroundColor: COLORS.surface,
   },
   emoji: {
@@ -115,6 +117,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     width: "100%",
     marginBottom: SPACING.lg,
+    backgroundColor: COLORS.surface,
+    ...SHADOWS.sm,
   },
   countryCode: {
     fontSize: 18,

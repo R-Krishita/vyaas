@@ -12,9 +12,10 @@ import joblib
 import os
 
 # FILE PATHS
-DATA_PATH = r"c:\Projects\vyaas\dataset\farmer_inputs.csv"
-MODEL_PATH = r"c:\Projects\vyaas\dataset\crop_recommendation_model.pkl"
-ENCODERS_PATH = r"c:\Projects\vyaas\dataset\label_encoders.pkl"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_PATH = os.path.join(BASE_DIR, "farmer_inputs.csv")
+MODEL_PATH = os.path.join(BASE_DIR, "crop_recommendation_model.pkl")
+ENCODERS_PATH = os.path.join(BASE_DIR, "label_encoders.pkl")
 
 def train_model():
     """Train the Random Forest model and save it."""
