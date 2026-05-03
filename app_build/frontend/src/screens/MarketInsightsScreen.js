@@ -1,7 +1,7 @@
 // src/screens/MarketInsightsScreen.js
-// Real-time mandi prices from data.gov.in API
+// Enhanced Market Comparison Screen with Line Charts and Profit Prediction
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,180 +11,338 @@ import {
   SafeAreaView,
   ActivityIndicator,
   RefreshControl,
+  Dimensions,
 } from 'react-native';
+import { LineChart } from 'react-native-chart-kit';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import shared from '../styles/style';
-import { marketAPI } from '../services/api';
+import { marketAPI, recommendAPI } from '../services/api';
+import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const { width } = Dimensions.get('window');
 
 const MarketInsightsScreen = ({ route, navigation }) => {
-  const cropName = route?.params?.crop || 'Tulsi';
+  const initialCrop = route?.params?.crop;
+  const [allRecommendedCrops, setAllRecommendedCrops] = useState(route?.params?.allCrops || []);
+  const [selectedCrop, setSelectedCrop] = useState(initialCrop || null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [priceData, setPriceData] = useState(null);
-  const [priceHistory, setPriceHistory] = useState([]);
+  const [comparisonData, setComparisonData] = useState({});
+  const [chartData, setChartData] = useState(null);
+  const [chartWidth, setChartWidth] = useState(300);
+  const [farmDistrict, setFarmDistrict] = useState(null);
+  const [farmState, setFarmState] = useState(null);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      let isActive = true;
+      const loadPersistedData = async () => {
+        // Load farm location for local mandi pricing
+        const [savedDistrict, savedState] = await Promise.all([
+          AsyncStorage.getItem('farm_district').catch(() => null),
+          AsyncStorage.getItem('farm_state').catch(() => null),
+        ]);
+        if (isActive && savedDistrict) setFarmDistrict(savedDistrict);
+        if (isActive && savedState) setFarmState(savedState);
+
+        if (route?.params?.allCrops && route.params.allCrops.length > 0) {
+          if (isActive) {
+            setAllRecommendedCrops(route.params.allCrops);
+            if (!selectedCrop) setSelectedCrop(route.params.crop || route.params.allCrops[0]);
+          }
+          await AsyncStorage.setItem('last_recommendations', JSON.stringify(route.params.allCrops));
+        } else {
+          try {
+            const savedStr = await AsyncStorage.getItem('last_recommendations');
+            if (savedStr) {
+              const savedCrops = JSON.parse(savedStr);
+              if (savedCrops && savedCrops.length > 0 && isActive) {
+                setAllRecommendedCrops(savedCrops);
+                if (!selectedCrop) setSelectedCrop(savedCrops[0]);
+              }
+            }
+          } catch (e) {
+            console.log('Error reading storage', e);
+          }
+        }
+      };
+      loadPersistedData();
+      return () => { isActive = false; };
+    }, [route?.params])
+  );
 
   useEffect(() => {
-    fetchMarketData();
-  }, [cropName]);
+    if (allRecommendedCrops.length === 0) {
+      setLoading(false);
+      return;
+    }
+    fetchAllData();
+  }, [allRecommendedCrops]);
 
-  const fetchMarketData = async () => {
+  const fetchAllData = async () => {
+    setLoading(true);
     try {
-      const [prices, history] = await Promise.all([
-        marketAPI.getMarketPrices(cropName, 'Maharashtra'),
-        marketAPI.getPriceHistory(cropName, 30),
+      // 1. Fetch details for all crops
+      let detailsRes = null;
+      try {
+        detailsRes = await recommendAPI.getCropDetails(allRecommendedCrops);
+      } catch (e) {
+        console.error('Error fetching crop details:', e);
+      }
+      const cropDetailsMap = {};
+      if (detailsRes && detailsRes.crops) {
+        detailsRes.crops.forEach(c => {
+          cropDetailsMap[c.crop_name] = c;
+        });
+      }
+
+      // 2. Fetch market data for all crops
+      const results = {};
+      const historyPromises = allRecommendedCrops.map(c => marketAPI.getPriceHistory(c, 30).catch(() => ({ history: [] })));
+      const pricePromises = allRecommendedCrops.map(c =>
+        marketAPI.getMarketPrices(c, farmState, farmDistrict)
+          .catch(() => ({ current_price_avg: 150, nearby_mandis: [] }))
+      );
+      
+      const [histories, prices] = await Promise.all([
+        Promise.all(historyPromises),
+        Promise.all(pricePromises)
       ]);
-      setPriceData(prices);
-      setPriceHistory(history.history || []);
+
+      for (let i = 0; i < allRecommendedCrops.length; i++) {
+        const c_name = allRecommendedCrops[i];
+        const history = histories[i]?.history || [];
+        const currentPrice = prices[i]?.current_price_avg || 150;
+        
+        // 3. Fetch harvest prediction
+        const econ = cropDetailsMap[c_name] || {};
+        const growthDays = econ.growth_days || 120;
+        const prediction = await marketAPI.getHarvestPrediction(c_name, growthDays, currentPrice).catch(() => null);
+        
+        // 4. Calculate expected profit
+        const yieldAvg = econ.yield_avg || 1000;
+        const costAvg = econ.cost_avg || 30000;
+        const predPrice = prediction?.predicted_price || currentPrice;
+        const expectedProfit = (predPrice * yieldAvg) - costAvg;
+
+        results[c_name] = {
+          details: econ,
+          current_price: currentPrice,
+          history: history,
+          prediction: prediction || { predicted_price: currentPrice, potential_change_pct: 0, harvest_days: growthDays },
+          expected_profit: expectedProfit,
+          mandi_data: prices[i] || { nearby_mandis: [] }
+        };
+      }
+
+      setComparisonData(results);
+      prepareChartData(results);
     } catch (error) {
-      // Use fallback data
-      setPriceData({
-        success: false,
-        crop: cropName,
-        current_price_avg: 180,
-        trend: 'stable',
-        nearby_mandis: [
-          { name: 'Pune Mandi', price_modal: 180, district: 'Pune' },
-          { name: 'Nagpur Mandi', price_modal: 195, district: 'Nagpur' },
-          { name: 'Mumbai Mandi', price_modal: 190, district: 'Mumbai' },
-        ],
+      console.error('[VYAAS] Error fetching comparison data:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const prepareChartData = (data) => {
+    const datasets = [];
+    const colors = [
+      (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
+      (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
+      (opacity = 1) => `rgba(255, 152, 0, ${opacity})`,
+    ];
+
+    allRecommendedCrops.forEach((c_name, index) => {
+      if (data[c_name] && data[c_name].history && data[c_name].history.length > 0) {
+        const points = data[c_name].history.slice(-7).map(h => h.price);
+        datasets.push({
+          data: points,
+          color: colors[index % colors.length],
+          strokeWidth: 2
+        });
+      }
+    });
+
+    if (datasets.length > 0) {
+      setChartData({
+        labels: ['6d', '5d', '4d', '3d', '2d', '1d', 'Now'],
+        datasets: datasets
       });
     }
-    setLoading(false);
-    setRefreshing(false);
   };
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchMarketData();
+    fetchAllData();
   };
 
-  const getTrendIcon = (trend) => {
-    switch (trend) {
-      case 'increasing': return '📈';
-      case 'decreasing': return '📉';
-      default: return '➡️';
-    }
-  };
+  if (allRecommendedCrops.length === 0) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyIcon}>📊</Text>
+          <Text style={styles.emptyTitle}>No Market Data Found</Text>
+          <Text style={styles.emptySubtitle}>
+            Please generate crop recommendations first to view their real-time market prices and profitability.
+          </Text>
+          <TouchableOpacity
+            style={styles.inputButton}
+            onPress={() => navigation.navigate('Crops')}
+          >
+            <Text style={styles.inputButtonText}>🌾 Go to Recommendations</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
-  if (loading) {
+  if (loading && !refreshing) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Fetching live mandi prices...</Text>
+        <Text style={styles.loadingText}>Analyzing market comparisons...</Text>
       </View>
     );
   }
+
+  const currentSelection = comparisonData[selectedCrop];
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.cropIcon}>🌿</Text>
-          <Text style={styles.title}>{cropName}</Text>
-          <Text style={styles.subtitle}>Live Market Prices</Text>
-        </View>
+        <Text style={styles.title}>📊 Market Comparison</Text>
+        <Text style={styles.subtitle}>Top 3 Recommended Crops</Text>
 
-        {/* Data Source Badge */}
-        <View style={styles.sourceBadge}>
-          <Text style={styles.sourceText}>
-            📡 Source: {priceData?.data_source || 'data.gov.in (Agmarknet)'}
-          </Text>
-        </View>
-
-        {/* Current Price Card */}
-        <View style={styles.priceCard}>
-          <Text style={styles.priceLabel}>Current Average Price</Text>
-          <View style={styles.priceRow}>
-            <Text style={styles.priceValue}>
-              ₹{priceData?.current_price_avg}/kg
-            </Text>
-            <View style={styles.trendBadge}>
-              <Text style={styles.trendIcon}>{getTrendIcon(priceData?.trend)}</Text>
-              <Text style={styles.trendText}>{priceData?.trend}</Text>
-            </View>
-          </View>
-          {priceData?.price_range && (
-            <Text style={styles.priceRange}>
-              Range: ₹{priceData.price_range.min} - ₹{priceData.price_range.max}
-            </Text>
+        <View 
+          style={styles.chartContainer}
+          onLayout={(event) => {
+            const { width } = event.nativeEvent.layout;
+            setChartWidth(width);
+          }}
+        >
+          <Text style={styles.sectionTitle}>📈 Price Trends (Side-by-Side)</Text>
+          {chartData ? (
+            <>
+              <LineChart
+                data={chartData}
+                width={chartWidth > 0 ? chartWidth : 300}
+                height={220}
+                chartConfig={chartConfig}
+                bezier
+                style={styles.chart}
+                formatYLabel={(y) => Math.round(Number(y)).toString()}
+              />
+              <View style={styles.customLegendContainer}>
+                {allRecommendedCrops.map((crop, idx) => {
+                  const colors = ['#4CAF50', '#2196F3', '#FF9800'];
+                  return (
+                    <View key={idx} style={styles.legendRow}>
+                      <View style={[styles.legendDot, { backgroundColor: colors[idx % colors.length] }]} />
+                      <Text style={styles.legendText}>{crop}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </>
+          ) : (
+            <View style={styles.noDataChart}><Text>No trend data available yet</Text></View>
           )}
         </View>
 
-        {/* Best Mandi */}
-        {priceData?.best_mandi && (
-          <View style={styles.bestMandiCard}>
-            <Text style={styles.sectionTitle}>🏆 Best Price Available</Text>
-            <View style={styles.bestMandiContent}>
-              <Text style={styles.bestMandiName}>{priceData.best_mandi.name}</Text>
-              <Text style={styles.bestMandiPrice}>
-                ₹{priceData.best_mandi.price_modal}/kg
-              </Text>
-              <Text style={styles.bestMandiLocation}>
-                📍 {priceData.best_mandi.district}
+        <View style={styles.comparisonDashboard}>
+          <Text style={styles.sectionTitle}>💰Profit Comparison Dashboard</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
+            {allRecommendedCrops.map((c_name, index) => {
+              const data = comparisonData[c_name];
+              if (!data) return null;
+              return (
+                <TouchableOpacity 
+                  key={index} 
+                  style={[styles.miniCard, selectedCrop === c_name && styles.selectedMiniCard]}
+                  onPress={() => setSelectedCrop(c_name)}
+                >
+                  <Text style={styles.miniCropName}>{c_name}</Text>
+                  <Text style={styles.miniProfit}>₹{Math.round(data.expected_profit / 1000)}k</Text>
+                  <Text style={styles.miniLabel}>Est. Profit</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        {currentSelection && (
+          <View style={styles.deepDiveContainer}>
+            <View style={styles.headerRow}>
+              <Text style={styles.deepDiveTitle}>🔍 {selectedCrop} Analysis</Text>
+            </View>
+
+            <View style={styles.predictionCard}>
+              <View style={styles.predictionRow}>
+                <View style={styles.predictionItem}>
+                  <Text style={styles.predictionLabel}>Current Price</Text>
+                  <Text style={styles.predictionValue}>₹{currentSelection.current_price}/kg</Text>
+                </View>
+                <Text style={styles.arrow}>→</Text>
+                <View style={styles.predictionItem}>
+                  <Text style={styles.predictionLabel}>Harvest Price (Est.)</Text>
+                  <Text style={styles.predictionValue}>₹{currentSelection.prediction.predicted_price}/kg</Text>
+                </View>
+              </View>
+              <Text style={styles.predictionNote}>
+                *Estimated based on {currentSelection.prediction.harvest_days} days growth cycle.
               </Text>
             </View>
-          </View>
-        )}
 
-        {/* Nearby Mandis */}
-        <Text style={styles.sectionTitle}>📍 Nearby Mandis</Text>
-        {priceData?.nearby_mandis?.map((mandi, index) => (
-          <View key={index} style={styles.mandiCard}>
-            <View style={styles.mandiInfo}>
-              <Text style={styles.mandiRank}>#{index + 1}</Text>
-              <View>
-                <Text style={styles.mandiName}>{mandi.name}</Text>
-                <Text style={styles.mandiDistrict}>{mandi.district}</Text>
+            <View style={styles.statsContainer}>
+              <View style={styles.statBox}>
+                <Text style={styles.statLabel}>Expected Yield</Text>
+                <Text style={styles.statValue}>{currentSelection.details.yield_avg || 'N/A'} kg/acre</Text>
+              </View>
+              <View style={styles.statBox}>
+                <Text style={styles.statLabel}>Cultivation Cost</Text>
+                <Text style={styles.statValue}>₹{(currentSelection.details.cost_avg || 0).toLocaleString()}</Text>
               </View>
             </View>
-            <View style={styles.mandiPriceContainer}>
-              <Text style={styles.mandiPrice}>₹{mandi.price_modal}/kg</Text>
-            </View>
-          </View>
-        ))}
 
-        {/* Price Trend Chart Placeholder */}
-        <View style={styles.chartCard}>
-          <Text style={styles.sectionTitle}>📈 Price Trend (30 days)</Text>
-          <View style={styles.chartPlaceholder}>
-            <View style={styles.chartBars}>
-              {[...Array(7)].map((_, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.chartBar,
-                    { height: 40 + Math.random() * 60 }
-                  ]}
-                />
-              ))}
+            <View style={styles.netProfitCard}>
+              <Text style={styles.netProfitLabel}>Estimated Net Profit at Harvest</Text>
+              <Text style={styles.netProfitValue}>₹{Math.round(currentSelection.expected_profit || 0).toLocaleString()}</Text>
+              <Text style={styles.netProfitSub}>Per acre basis after all expenses</Text>
             </View>
-            <Text style={styles.chartLabel}>Week 1 → Week 4</Text>
-          </View>
-        </View>
 
-        {/* Price Alert */}
-        <View style={styles.alertCard}>
-          <Text style={styles.alertIcon}>🔔</Text>
-          <View style={styles.alertContent}>
-            <Text style={styles.alertTitle}>Set Price Alert</Text>
-            <Text style={styles.alertText}>
-              Get notified when price crosses ₹200/kg
-            </Text>
+            <Text style={styles.sectionTitle}>📍 Best Mandis for {selectedCrop}</Text>
+            {currentSelection.mandi_data?.nearby_mandis?.length > 0 ? (
+              currentSelection.mandi_data.nearby_mandis.map((mandi, i) => (
+                <View key={i} style={styles.mandiItem}>
+                  <Text style={styles.mandiName}>{mandi.name}</Text>
+                  <Text style={styles.mandiPrice}>₹{mandi.price_modal}/kg</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.noDataText}>No mandi data available for this region</Text>
+            )}
           </View>
-          <TouchableOpacity style={styles.alertButton}>
-            <Text style={styles.alertButtonText}>Set</Text>
-          </TouchableOpacity>
-        </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
+};
+
+const chartConfig = {
+  backgroundColor: '#ffffff',
+  backgroundGradientFrom: '#ffffff',
+  backgroundGradientTo: '#ffffff',
+  decimalPlaces: 0,
+  color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+  style: { borderRadius: 16 },
+  propsForDots: { r: '4', strokeWidth: '2', stroke: '#ffa726' }
 };
 
 const styles = StyleSheet.create({
@@ -192,207 +350,115 @@ const styles = StyleSheet.create({
   loadingContainer: shared.loadingContainer,
   loadingText: shared.loadingText,
   scrollView: shared.scrollView,
-  header: {
-    alignItems: 'center',
-    marginBottom: SPACING.md,
-  },
-  cropIcon: {
-    fontSize: 48,
-  },
   title: {
     ...shared.screenTitle,
-    textAlign: undefined,
+    fontSize: 22,
   },
   subtitle: shared.screenSubtitle,
-  sourceBadge: {
-    backgroundColor: '#E3F2FD',
-    padding: SPACING.sm,
-    borderRadius: RADIUS.sm,
-    marginBottom: SPACING.md,
-  },
-  sourceText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.info,
-    textAlign: 'center',
-  },
-  priceCard: {
-    backgroundColor: COLORS.surface,
-    padding: SPACING.lg,
-    borderRadius: RADIUS.lg,
+  chartContainer: {
     marginBottom: SPACING.lg,
-    ...SHADOWS.md,
-  },
-  priceLabel: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.xs,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  priceValue: {
-    fontSize: FONTS.sizes.xxl,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  trendBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E8F5E9',
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-    borderRadius: RADIUS.round,
-  },
-  trendIcon: {
-    fontSize: 16,
-    marginRight: 4,
-  },
-  trendText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.success,
-    textTransform: 'capitalize',
-  },
-  priceRange: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    marginTop: SPACING.sm,
-  },
-  bestMandiCard: {
-    backgroundColor: '#FFF8E1',
-    padding: SPACING.lg,
-    borderRadius: RADIUS.lg,
-    marginBottom: SPACING.lg,
-    borderWidth: 1,
-    borderColor: COLORS.accent,
-  },
-  bestMandiContent: {
-    alignItems: 'center',
-  },
-  bestMandiName: {
-    fontSize: FONTS.sizes.lg,
-    fontWeight: 'bold',
-    color: COLORS.secondary,
-  },
-  bestMandiPrice: {
-    fontSize: FONTS.sizes.xl,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-    marginVertical: SPACING.xs,
-  },
-  bestMandiLocation: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
   },
   sectionTitle: {
-    fontSize: FONTS.sizes.lg,
-    fontWeight: '600',
+    fontSize: FONTS.sizes.md,
+    fontWeight: 'bold',
     color: COLORS.textPrimary,
     marginBottom: SPACING.md,
-  },
-  mandiCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: COLORS.surface,
-    padding: SPACING.md,
-    borderRadius: RADIUS.md,
-    marginBottom: SPACING.sm,
-    ...SHADOWS.sm,
-  },
-  mandiInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  mandiRank: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-    marginRight: SPACING.md,
-  },
-  mandiName: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
-  },
-  mandiDistrict: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-  },
-  mandiPriceContainer: {
-    backgroundColor: '#E8F5E9',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-    borderRadius: RADIUS.sm,
-  },
-  mandiPrice: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: 'bold',
-    color: COLORS.success,
-  },
-  chartCard: {
-    backgroundColor: COLORS.surface,
-    padding: SPACING.lg,
-    borderRadius: RADIUS.lg,
-    marginVertical: SPACING.lg,
-    ...SHADOWS.sm,
-  },
-  chartPlaceholder: {
-    alignItems: 'center',
-  },
-  chartBars: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    height: 100,
-    width: '100%',
-    justifyContent: 'space-around',
-  },
-  chartBar: {
-    width: 30,
-    backgroundColor: COLORS.primary,
-    borderRadius: 4,
-    opacity: 0.7,
-  },
-  chartLabel: {
     marginTop: SPACING.sm,
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
   },
-  alertCard: {
+  chart: { marginVertical: 8, borderRadius: RADIUS.lg },
+  customLegendContainer: {
+    marginTop: SPACING.sm,
+    paddingHorizontal: SPACING.sm,
+  },
+  legendRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: SPACING.sm,
+  },
+  legendDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: SPACING.sm,
+  },
+  legendText: {
+    fontSize: FONTS.sizes.md,
+    color: COLORS.textPrimary,
+    fontWeight: '500',
+  },
+  noDataChart: { height: 200, justifyContent: 'center', alignItems: 'center' },
+  noDataText: { color: COLORS.textMuted, textAlign: 'center', padding: SPACING.md },
+  comparisonDashboard: { marginBottom: SPACING.lg },
+  horizontalScroll: { flexDirection: 'row' },
+  miniCard: {
     backgroundColor: COLORS.surface,
     padding: SPACING.md,
-    borderRadius: RADIUS.lg,
-    marginBottom: SPACING.xxl,
+    borderRadius: RADIUS.md,
+    marginRight: SPACING.md,
+    width: 120,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
     ...SHADOWS.sm,
   },
-  alertIcon: {
-    fontSize: 28,
-    marginRight: SPACING.md,
-  },
-  alertContent: {
+  selectedMiniCard: { borderColor: COLORS.primary, backgroundColor: '#E8F5E9' },
+  miniCropName: { fontWeight: 'bold', fontSize: FONTS.sizes.md, color: COLORS.textPrimary },
+  miniProfit: { fontSize: FONTS.sizes.lg, fontWeight: 'bold', color: COLORS.secondary, marginVertical: 4 },
+  miniLabel: { fontSize: 10, color: COLORS.textSecondary },
+  deepDiveContainer: { marginTop: SPACING.md, paddingBottom: SPACING.xxl },
+  headerRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: SPACING.md },
+  deepDiveTitle: { fontSize: FONTS.sizes.lg, fontWeight: 'bold', color: COLORS.primary },
+  trendBadge: { backgroundColor: '#E3F2FD', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
+  trendText: { color: COLORS.info, fontWeight: '600', fontSize: 12 },
+  predictionCard: { backgroundColor: '#F5F5F5', padding: SPACING.lg, borderRadius: RADIUS.md, marginBottom: SPACING.md },
+  predictionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' },
+  predictionItem: { alignItems: 'center' },
+  predictionLabel: { fontSize: 10, color: COLORS.textSecondary, marginBottom: 4 },
+  predictionValue: { fontSize: FONTS.sizes.lg, fontWeight: 'bold', color: COLORS.textPrimary },
+  arrow: { fontSize: 24, color: COLORS.textMuted },
+  predictionNote: { fontSize: 9, color: COLORS.textMuted, marginTop: 12, textAlign: 'center', fontStyle: 'italic' },
+  statsContainer: { flexDirection: 'row', gap: SPACING.md, marginBottom: SPACING.md },
+  statBox: { flex: 1, backgroundColor: COLORS.surface, padding: SPACING.md, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border },
+  statLabel: { fontSize: 10, color: COLORS.textSecondary, marginBottom: 4 },
+  statValue: { fontSize: FONTS.sizes.md, fontWeight: '600', color: COLORS.textPrimary },
+  netProfitCard: { backgroundColor: COLORS.secondary, padding: SPACING.lg, borderRadius: RADIUS.lg, alignItems: 'center', marginBottom: SPACING.xl },
+  netProfitLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 12, marginBottom: 8 },
+  netProfitValue: { color: '#ffffff', fontSize: 32, fontWeight: 'bold' },
+  netProfitSub: { color: 'rgba(255,255,255,0.6)', fontSize: 10, marginTop: 4 },
+  mandiItem: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: SPACING.sm, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+  mandiName: { color: COLORS.textPrimary, fontSize: FONTS.sizes.md },
+  mandiPrice: { fontWeight: 'bold', color: COLORS.success },
+  emptyContainer: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.xxl,
   },
-  alertTitle: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: '600',
+  emptyIcon: {
+    fontSize: 80,
+    marginBottom: SPACING.lg,
+  },
+  emptyTitle: {
+    fontSize: FONTS.sizes.xl,
+    fontWeight: 'bold',
     color: COLORS.textPrimary,
+    marginBottom: SPACING.sm,
+    textAlign: 'center',
   },
-  alertText: {
-    fontSize: FONTS.sizes.sm,
+  emptySubtitle: {
+    fontSize: FONTS.sizes.md,
     color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginBottom: SPACING.xxl,
+    lineHeight: 24,
   },
-  alertButton: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    borderRadius: RADIUS.md,
+  inputButton: {
+    ...shared.primaryButton,
+    width: '100%',
+    padding: SPACING.lg,
   },
-  alertButtonText: {
-    color: COLORS.textLight,
-    fontWeight: '600',
+  inputButtonText: {
+    ...shared.primaryButtonText,
   },
 });
 

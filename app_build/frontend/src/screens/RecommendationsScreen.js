@@ -14,6 +14,7 @@ import {
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import shared from '../styles/style';
 import { recommendAPI } from '../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Demo recommendations (used when API fails)
 const demoRecommendations = [
@@ -66,30 +67,57 @@ const getBandColor = (band) => {
   }
 };
 
-const RecommendationsScreen = ({ navigation }) => {
+const RecommendationsScreen = ({ navigation, route }) => {
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
     fetchRecommendations();
   }, []);
 
   const fetchRecommendations = async () => {
+    const farm_id = route?.params?.farm_id || 'FARM_001';
     try {
-      const response = await recommendAPI.getCropRecommendations('FARM_001');
-      setRecommendations(response.recommendations || demoRecommendations);
+      const response = await recommendAPI.getCropRecommendations(farm_id);
+      const recs = response.recommendations || [];
+      if (recs.length > 0) {
+        setRecommendations(recs);
+        setIsDemo(false);
+        try {
+          await AsyncStorage.setItem('last_recommendations', JSON.stringify(recs.map(r => r.crop_name)));
+        } catch (e) {
+          console.log('Error saving recommendations', e);
+        }
+      } else {
+        setRecommendations(demoRecommendations);
+        setIsDemo(true);
+        try {
+          await AsyncStorage.setItem('last_recommendations', JSON.stringify(demoRecommendations.map(r => r.crop_name)));
+        } catch (e) {
+          console.log('Error saving demo recs', e);
+        }
+      }
     } catch (error) {
       setRecommendations(demoRecommendations);
+      setIsDemo(true);
+      try {
+        await AsyncStorage.setItem('last_recommendations', JSON.stringify(demoRecommendations.map(r => r.crop_name)));
+      } catch (e) {
+        console.log('Error saving demo recs', e);
+      }
     }
     setLoading(false);
   };
 
-  const handleViewPlan = (crop) => {
-    navigation.navigate('CultivationPlan', { crop });
-  };
-
   const handleViewMarket = (crop) => {
-    navigation.navigate('MarketInsights', { crop: crop.crop_name });
+    navigation.navigate('Market', { 
+      screen: 'MarketMain',
+      params: {
+        crop: crop.crop_name,
+        allCrops: recommendations.map(r => r.crop_name)
+      }
+    });
   };
 
   if (loading) {
@@ -101,11 +129,39 @@ const RecommendationsScreen = ({ navigation }) => {
     );
   }
 
+  if (recommendations.length === 0) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyIcon}>🚜</Text>
+          <Text style={styles.emptyTitle}>No Farm Details Found</Text>
+          <Text style={styles.emptySubtitle}>
+            Input your farm details to get the best Ayurvedic crop recommendations for your land.
+          </Text>
+          <TouchableOpacity
+            style={styles.inputButton}
+            onPress={() => navigation.navigate('FarmDetails')}
+          >
+            <Text style={styles.inputButtonText}>🌱 Enter Farm Details</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>🌾 Your Top 3 Ayurvedic Crops</Text>
         <Text style={styles.subtitle}>Based on your farm conditions</Text>
+
+        {isDemo && (
+          <View style={styles.demoBanner}>
+            <Text style={styles.demoBannerText}>
+              ⚠️ Showing demo crops — connect to backend for live ML predictions
+            </Text>
+          </View>
+        )}
 
         {recommendations.map((crop, index) => (
           <View key={crop.rank} style={styles.cropCard}>
@@ -150,16 +206,10 @@ const RecommendationsScreen = ({ navigation }) => {
             {/* Action Buttons */}
             <View style={styles.buttonRow}>
               <TouchableOpacity
-                style={styles.planButton}
-                onPress={() => handleViewPlan(crop)}
-              >
-                <Text style={styles.planButtonText}>📋 View Plan</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
                 style={styles.marketButton}
                 onPress={() => handleViewMarket(crop)}
               >
-                <Text style={styles.marketButtonText}>📊 Prices</Text>
+                <Text style={styles.marketButtonText}>📊 View Market Comparison</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -181,6 +231,19 @@ const styles = StyleSheet.create({
   subtitle: {
     ...shared.screenSubtitle,
     marginBottom: SPACING.lg,
+  },
+  demoBanner: {
+    backgroundColor: '#FFF3CD',
+    borderLeftWidth: 4,
+    borderLeftColor: '#FFC107',
+    borderRadius: RADIUS.sm,
+    padding: SPACING.md,
+    marginBottom: SPACING.lg,
+  },
+  demoBannerText: {
+    fontSize: FONTS.sizes.sm,
+    color: '#856404',
+    fontWeight: '500',
   },
   cropCard: {
     backgroundColor: COLORS.surface,
@@ -272,29 +335,52 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: SPACING.sm,
   },
-  planButton: {
-    flex: 1,
-    backgroundColor: COLORS.primary,
-    padding: SPACING.md,
-    borderRadius: RADIUS.md,
-    alignItems: 'center',
-  },
-  planButtonText: {
-    color: COLORS.textLight,
-    fontWeight: '600',
-  },
   marketButton: {
     flex: 1,
-    backgroundColor: COLORS.surface,
-    padding: SPACING.md,
+    backgroundColor: COLORS.primary,
+    padding: SPACING.lg,
     borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.primary,
     alignItems: 'center',
+    ...SHADOWS.sm,
   },
   marketButtonText: {
-    color: COLORS.primary,
-    fontWeight: '600',
+    color: COLORS.textLight,
+    fontWeight: 'bold',
+    fontSize: FONTS.sizes.md,
+  },
+  
+  // Empty State
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.xxl,
+  },
+  emptyIcon: {
+    fontSize: 80,
+    marginBottom: SPACING.lg,
+  },
+  emptyTitle: {
+    fontSize: FONTS.sizes.xl,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+    marginBottom: SPACING.sm,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: FONTS.sizes.md,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginBottom: SPACING.xxl,
+    lineHeight: 24,
+  },
+  inputButton: {
+    ...shared.primaryButton,
+    width: '100%',
+    padding: SPACING.lg,
+  },
+  inputButtonText: {
+    ...shared.primaryButtonText,
   },
 });
 

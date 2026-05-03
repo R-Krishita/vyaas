@@ -23,6 +23,7 @@ try {
 import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
 import shared from '../styles/style';
 import { farmAPI } from '../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import ScreenWrapper from '../components/ScreenWrapper';
 import FormInput from '../components/FormInput';
@@ -37,7 +38,11 @@ const indianStates = [
   'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
   'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
 ];
-const soilTypes = ['Black', 'Red', 'Alluvial', 'Laterite', 'Sandy', 'Clay', 'Loamy'];
+const soilTypes = [
+  'Alluvial', 'Black soil', 'Clay', 'Clay loam', 'Humus-rich',
+  'Laterite', 'Light soil', 'Loamy', 'Marshy', 'Red laterite',
+  'Red loamy', 'Rocky', 'Sandy', 'Sandy loam', 'Silty clay'
+];
 const waterSources = ['Well', 'Borewell', 'Canal', 'River', 'Rainwater'];
 const irrigationTypes = ['Drip', 'Sprinkler', 'Flood', 'Manual'];
 const seasons = ['Kharif', 'Rabi', 'Zaid'];
@@ -77,13 +82,16 @@ const FarmDetailsScreen = ({ navigation }) => {
     state: '',
     district: '',
     farmSize: '',
-    soilType: 'Black',
+    soilType: 'Black soil',
     soilPh: '6.5',
     nitrogen: '',
     phosphorus: '',
     potassium: '',
     rainfall: '',
     temperature: '',
+    soilMoisture: '50',
+    organicCarbon: '1.2',
+    humidity: '60',
     waterSource: 'Well',
     irrigationType: 'Drip',
     season: 'Kharif',
@@ -187,11 +195,21 @@ const FarmDetailsScreen = ({ navigation }) => {
   };
 
   const handleSubmit = async () => {
+    const farm_id = 'FARM_001'; // Single-user demo; extend to per-user later
     try {
-      await farmAPI.saveFarmDetails(formData);
-      navigation.navigate('Recommendations');
+      await farmAPI.saveFarmDetails({ ...formData, farm_id });
+      // Persist district and state for MarketInsightsScreen local mandi lookup
+      if (formData.district) {
+        await AsyncStorage.setItem('farm_district', formData.district);
+      }
+      if (formData.state) {
+        await AsyncStorage.setItem('farm_state', formData.state);
+      }
+      console.log('[VYAAS] Farm details saved, navigating to Recommendations');
+      navigation.navigate('Recommendations', { farm_id, farmData: formData });
     } catch (error) {
-      navigation.navigate('Recommendations'); // Demo: proceed anyway
+      console.warn('[VYAAS] Could not save farm details, proceeding to demo mode:', error?.message);
+      navigation.navigate('Recommendations', { farm_id, farmData: formData });
     }
   };
 
@@ -281,6 +299,24 @@ const FarmDetailsScreen = ({ navigation }) => {
               label="Temperature (°C)" icon="🌡️"
               value={formData.temperature} placeholder="e.g., 28"
               onChangeText={(v) => updateField('temperature', v)}
+              keyboardType="number-pad"
+            />
+            <FormInput
+              label="Soil Moisture (%)" icon="💧"
+              value={formData.soilMoisture} placeholder="e.g., 50"
+              onChangeText={(v) => updateField('soilMoisture', v)}
+              keyboardType="number-pad"
+            />
+            <FormInput
+              label="Organic Carbon (%)" icon="🍂"
+              value={formData.organicCarbon} placeholder="e.g., 1.2"
+              onChangeText={(v) => updateField('organicCarbon', v)}
+              keyboardType="number-pad"
+            />
+            <FormInput
+              label="Air Humidity (%)" icon="🌫️"
+              value={formData.humidity} placeholder="e.g., 60"
+              onChangeText={(v) => updateField('humidity', v)}
               keyboardType="number-pad"
             />
             <PickerInput

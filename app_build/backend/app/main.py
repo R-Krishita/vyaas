@@ -2,14 +2,42 @@
 # Smart Ayurvedic Crop Advisor - FastAPI Backend
 # Main application entry point with real Mandi API integration
 
+import asyncio
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import market_router, farm_router, ml_router
 from app.routers.auth import router as auth_router
 from app.config import get_settings
+from app.services.mandi_service import MandiService
+
+# ─── Background Cache Worker ──────────────────────────────────────────────────
+async def background_price_fetcher():
+    """Proactively refreshes the mandi price cache every 12 hours.
+    Runs immediately on server startup so the cache is always warm.
+    """
+    settings = get_settings()
+    from app.routers.market import _mandi_service_instance, get_mandi_service
+    mandi_service = get_mandi_service(settings)  # returns or creates singleton
+    all_crops = settings.supported_crops
+
+    while True:
+        print(f"[CACHE] Refreshing mandi prices for {len(all_crops)} crops in background...")
+        await mandi_service.refresh_cache_for_crops(all_crops)
+        print(f"[CACHE] ✅ Background refresh complete. Next refresh in 12 hours.")
+        await asyncio.sleep(12 * 60 * 60)  # 12 hours
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """App lifespan: starts background price fetcher on startup."""
+    asyncio.create_task(background_price_fetcher())
+    yield  # App is running
+    # (cleanup on shutdown can go here if needed)
+# ─────────────────────────────────────────────────────────────────────────────
 
 # Initialize FastAPI app
 app = FastAPI(
+    lifespan=lifespan,
     title="Smart Ayurvedic Crop Advisor API",
     description="""
     🌿 Backend API for the Smart Ayurvedic Crop Advisor mobile app.
