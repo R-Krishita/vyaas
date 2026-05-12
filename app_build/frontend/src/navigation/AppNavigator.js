@@ -20,6 +20,7 @@ import MarketInsightsScreen from '../screens/MarketInsightsScreen';
 import CultivationPlanScreen from '../screens/CultivationPlanScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import OTPVerificationScreen from '../screens/OTPVerificationScreen';
+import RegisterScreen from '../screens/RegisterScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -223,6 +224,7 @@ const AppNavigator = () => (
       <Stack.Screen name="Splash" component={SplashScreen} />
       <Stack.Screen name="Language" component={LanguageScreen} />
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="OTPLogin" component={OTPLoginScreen} />
       <Stack.Screen name="OTPVerification" component={OTPVerificationScreen} />
 

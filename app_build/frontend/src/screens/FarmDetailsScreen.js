@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Safe import — expo-location may not work in all Expo Go versions
 let Location = null;
@@ -23,7 +24,6 @@ try {
 import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
 import shared from '../styles/style';
 import { farmAPI } from '../services/api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import ScreenWrapper from '../components/ScreenWrapper';
 import FormInput from '../components/FormInput';
@@ -78,10 +78,11 @@ const matchState = (regionName) => {
 const FarmDetailsScreen = ({ navigation }) => {
   const [step, setStep] = useState(1);
   const [detectingLocation, setDetectingLocation] = useState(false);
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     state: '',
     district: '',
-    farmSize: '',
+    totalFarmSizeAcres: '',   // matches farmers.total_farm_size_acres
     soilType: 'Black soil',
     soilPh: '6.5',
     nitrogen: '',
@@ -101,6 +102,28 @@ const FarmDetailsScreen = ({ navigation }) => {
 
   const updateField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error on edit
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: null }));
+  };
+
+  // ── Per-step mandatory field validation ──────────────────────────
+  const REQUIRED_BY_STEP = {
+    1: ['state', 'district', 'totalFarmSizeAcres', 'soilType', 'soilPh'],
+    2: ['nitrogen', 'phosphorus', 'potassium', 'rainfall', 'temperature',
+        'soilMoisture', 'organicCarbon', 'humidity', 'waterSource', 'irrigationType'],
+    3: ['season', 'previousCrop', 'budget'],
+  };
+
+  const validateStep = (s) => {
+    const newErrors = {};
+    for (const field of REQUIRED_BY_STEP[s]) {
+      const val = formData[field];
+      if (!val || String(val).trim() === '') {
+        newErrors[field] = 'This field is required';
+      }
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleDetectLocation = async () => {
@@ -195,20 +218,32 @@ const FarmDetailsScreen = ({ navigation }) => {
   };
 
   const handleSubmit = async () => {
-    const farm_id = 'FARM_001'; // Single-user demo; extend to per-user later
+    const farm_id = 'FARM_001';
     try {
-      await farmAPI.saveFarmDetails({ ...formData, farm_id });
-      // Persist district and state for MarketInsightsScreen local mandi lookup
-      if (formData.district) {
+      const farmer_id = await AsyncStorage.getItem('farmer_id') || 'ANON';
+      const payload = {
+        ...formData,
+        farm_id,
+        farmer_id,
+        // Normalise key names to match backend expectations
+        farmSize: formData.totalFarmSizeAcres,
+        total_farm_size_acres: formData.totalFarmSizeAcres,
+        ph: formData.soilPh,
+        soil_moisture: formData.soilMoisture,
+        organic_carbon: formData.organicCarbon,
+        soil_type: formData.soilType,
+      };
+      await farmAPI.saveFarmDetails(payload);
+      if (formData.district)
         await AsyncStorage.setItem('farm_district', formData.district);
-      }
-      if (formData.state) {
+      if (formData.state)
         await AsyncStorage.setItem('farm_state', formData.state);
-      }
+      // Store farm_id for feedback calls in MarketInsightsScreen
+      await AsyncStorage.setItem('farm_id', farm_id);
       console.log('[VYAAS] Farm details saved, navigating to Recommendations');
-      navigation.navigate('Recommendations', { farm_id, farmData: formData });
+      navigation.navigate('Recommendations', { farm_id, farmData: payload });
     } catch (error) {
-      console.warn('[VYAAS] Could not save farm details, proceeding to demo mode:', error?.message);
+      console.warn('[VYAAS] Could not save farm details:', error?.message);
       navigation.navigate('Recommendations', { farm_id, farmData: formData });
     }
   };
@@ -249,10 +284,11 @@ const FarmDetailsScreen = ({ navigation }) => {
               onChangeText={(v) => updateField('district', v)}
             />
             <FormInput
-              label="Farm Size (Acres)" icon="📐"
-              value={formData.farmSize} placeholder="e.g., 2.5"
-              onChangeText={(v) => updateField('farmSize', v)}
+              label="Total Farm Size (Acres) ✱" icon="📐"
+              value={formData.totalFarmSizeAcres} placeholder="e.g., 2.5"
+              onChangeText={(v) => updateField('totalFarmSizeAcres', v)}
               keyboardType="decimal-pad"
+              error={errors.totalFarmSizeAcres}
             />
             <PickerInput
               label="Soil Type" icon="🪨"
@@ -369,6 +405,13 @@ const FarmDetailsScreen = ({ navigation }) => {
         <TouchableOpacity
           style={styles.nextButton}
           onPress={() => {
+            if (!validateStep(step)) {
+              Alert.alert(
+                '⚠️ Missing Fields',
+                'Please fill in all required fields before continuing.',
+              );
+              return;
+            }
             if (step < 3) setStep(step + 1);
             else handleSubmit();
           }}

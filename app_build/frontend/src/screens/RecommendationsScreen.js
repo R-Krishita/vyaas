@@ -192,6 +192,18 @@ const RecommendationsScreen = ({ navigation, route }) => {
               </Text>
             </View>
 
+            {/* Estimated Yield (farm-size aware) */}
+            {crop.estimated_yield_kg > 0 && (
+              <View style={styles.yieldRow}>
+                <Text style={styles.yieldLabel}>
+                  📦 Est. Yield ({crop.farm_size_acres || 1} acres):
+                </Text>
+                <Text style={styles.yieldValue}>
+                  {crop.estimated_yield_kg.toLocaleString()} kg
+                </Text>
+              </View>
+            )}
+
             {/* Reasons */}
             <View style={styles.reasonsSection}>
               <Text style={styles.reasonsTitle}>Why this crop?</Text>
@@ -308,6 +320,24 @@ const styles = StyleSheet.create({
     fontSize: FONTS.sizes.lg,
     fontWeight: 'bold',
     color: COLORS.secondary,
+  },
+  yieldRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E9',
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
+    marginBottom: SPACING.md,
+  },
+  yieldLabel: {
+    fontSize: FONTS.sizes.md,
+    color: COLORS.textSecondary,
+  },
+  yieldValue: {
+    fontSize: FONTS.sizes.md,
+    fontWeight: 'bold',
+    color: COLORS.primary,
   },
   reasonsSection: {
     marginBottom: SPACING.md,

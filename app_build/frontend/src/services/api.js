@@ -25,6 +25,7 @@ apiClient.interceptors.response.use(
 export const authAPI = {
   sendOtp: (phone) => apiClient.post(API_ENDPOINTS.sendOtp, { phone }),
   verifyOtp: (phone, otp) => apiClient.post(API_ENDPOINTS.verifyOtp, { phone, otp }),
+  register: (farmerData) => apiClient.post(API_ENDPOINTS.register, farmerData),
 };
 
 // Farm APIs
@@ -65,6 +66,17 @@ export const marketAPI = {
   getSupportedCrops: () => apiClient.get(API_ENDPOINTS.getSupportedCrops),
 };
 
+
+// Feedback API — explicit crop selection (NOT implicit browse)
+export const feedbackAPI = {
+  submitChoice: (farmerId, farmId, recommendedCrops, chosenCrop) =>
+    apiClient.post('/api/ml/feedback', {
+      farmer_id: farmerId,
+      farm_id: farmId,
+      recommended_crops: recommendedCrops,
+      chosen_crop: chosenCrop,
+    }),
+};
 
 // PDF API
 export const pdfAPI = {

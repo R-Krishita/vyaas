@@ -28,6 +28,7 @@ export const API_ENDPOINTS = {
   // Auth
   sendOtp: '/api/auth/otp',
   verifyOtp: '/api/auth/verify',
+  register: '/api/auth/register',
   
   // Farm
   saveFarm: '/api/farm/save',
