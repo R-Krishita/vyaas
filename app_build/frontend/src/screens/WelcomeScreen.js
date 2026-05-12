@@ -33,7 +33,7 @@ const WelcomeScreen = ({ navigation }) => {
 
                     <TouchableOpacity
                         style={styles.signupButton}
-                        onPress={() => navigation.navigate('OTPLogin', { isSignup: true })}
+                        onPress={() => navigation.navigate('Register')}
                         activeOpacity={0.8}
                     >
                         <Text style={styles.signupButtonText}>{t('signup_button')}</Text>
