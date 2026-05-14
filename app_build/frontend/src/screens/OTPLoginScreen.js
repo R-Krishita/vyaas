@@ -15,7 +15,7 @@ import { useNavigation } from "@react-navigation/native";
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import shared from '../styles/style';
 import ScreenWrapper from '../components/ScreenWrapper';
-import { sendOtp } from '../services/authApi';
+import { sendOtp, checkPhoneExists } from '../services/authApi';
 
 export default function OTPLoginScreen() {
   const navigation = useNavigation();
@@ -37,12 +37,41 @@ export default function OTPLoginScreen() {
     const fullPhone = `+91${cleanPhone}`;
     setLoading(true);
     try {
+      // ✅ NEW: Check if phone exists in database first
+      const checkResult = await checkPhoneExists(fullPhone);
+      
+      if (!checkResult.exists) {
+        // Phone not registered — offer to register
+        Alert.alert(
+          "Phone Not Registered",
+          "This phone number is not registered with VYAAS yet.",
+          [
+            {
+              text: "Register Now",
+              onPress: () => {
+                setLoading(false);
+                navigation.navigate("Register", { phone: fullPhone });
+              },
+            },
+            {
+              text: "Try Different Number",
+              onPress: () => {
+                setLoading(false);
+                setPhone("");
+              },
+            },
+          ]
+        );
+        return;
+      }
+
+      // Phone exists — proceed with OTP
       await sendOtp(fullPhone);
       navigation.navigate("OTPVerification", { phone: fullPhone });
     } catch (error) {
       Alert.alert(
         "Error",
-        error.message || error.detail || "Failed to send OTP. Please try again."
+        error.message || error.detail || "Failed to process request. Please try again."
       );
     } finally {
       setLoading(false);
@@ -51,6 +80,10 @@ export default function OTPLoginScreen() {
 
   return (
     <ScreenWrapper>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Text style={styles.backButtonText}>← Back</Text>
+      </TouchableOpacity>
+      
       <View style={styles.content}>
         <Text style={styles.emoji}>🌿</Text>
         <Text style={styles.title}>Welcome to VYAAS</Text>
@@ -89,6 +122,19 @@ export default function OTPLoginScreen() {
 }
 
 const styles = StyleSheet.create({
+  backButton: {
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    zIndex: 10,
+  },
+  backButtonText: {
+    fontSize: FONTS.sizes.md,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
   content: {
     flex: 1,
     justifyContent: 'center',

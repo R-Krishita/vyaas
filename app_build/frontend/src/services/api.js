@@ -17,7 +17,15 @@ apiClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
     console.error('API Error:', error);
-    return Promise.reject(error);
+    // Extract error details for better UX
+    const errorData = error.response?.data || error.data || {};
+    const errorMessage = errorData.detail || errorData.message || error.message || 'Request failed';
+    const errorWithMessage = {
+      ...errorData,
+      message: errorMessage,
+      status: error.response?.status,
+    };
+    return Promise.reject(errorWithMessage);
   }
 );
 
@@ -26,6 +34,7 @@ export const authAPI = {
   sendOtp: (phone) => apiClient.post(API_ENDPOINTS.sendOtp, { phone }),
   verifyOtp: (phone, otp) => apiClient.post(API_ENDPOINTS.verifyOtp, { phone, otp }),
   register: (farmerData) => apiClient.post(API_ENDPOINTS.register, farmerData),
+  getProfile: (farmerId) => apiClient.get(`${API_ENDPOINTS.getProfile}/${farmerId}`),
 };
 
 // Farm APIs
@@ -35,9 +44,10 @@ export const farmAPI = {
 };
 
 // Recommendation APIs
-export const recommendAPI = {
-  getCropRecommendations: (farmId) => 
-    apiClient.post(API_ENDPOINTS.getRecommendations, { farm_id: farmId }),
+export const mlAPI = {
+  getRecommendations: (farmId) => apiClient.post(API_ENDPOINTS.getRecommendations, { farm_id: farmId }),
+  submitFeedback: (feedbackData) => apiClient.post('/api/ml/feedback', feedbackData),
+  getFeedbackHistory: (farmerId) => apiClient.get(`${API_ENDPOINTS.getFeedbackHistory}/${farmerId}`),
   getCropDetails: (crops) => 
     apiClient.get(`/api/ml/crop-details?crop=${crops.join(',')}`),
 };

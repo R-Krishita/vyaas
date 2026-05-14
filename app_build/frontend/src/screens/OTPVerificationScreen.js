@@ -79,16 +79,34 @@ export default function OTPVerificationScreen() {
       if (response.success) {
         // Store auth token
         await AsyncStorage.setItem("authToken", response.token);
-        await AsyncStorage.setItem("farmerId", response.farmer_id);
 
-        // Navigate to main app
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "MainTabs" }],
-        });
+        if (response.registered && response.farmer_id) {
+          // Existing farmer — save ID and go to main app
+          await AsyncStorage.setItem("farmer_id", response.farmer_id);
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "MainTabs" }],
+          });
+        } else {
+          // OTP verified but no profile — go to registration
+          Alert.alert(
+            "Almost there!",
+            "Your phone is verified. Please complete your profile.",
+          );
+          navigation.navigate("Register", { phone });
+        }
+      } else {
+        // Response but not success — unusual case
+        Alert.alert(
+          "Verification Failed",
+          response.message || "Failed to verify OTP. Please try again."
+        );
       }
     } catch (error) {
-      Alert.alert("Error", error.message || "Invalid OTP. Please try again.");
+      // ✅ IMPROVED: Better error message extraction
+      const errorMessage = error.message || error.detail || "Invalid OTP. Please try again.";
+      console.log('[OTP] Error during verification:', error);
+      Alert.alert("Invalid OTP", errorMessage);
     } finally {
       setLoading(false);
     }

@@ -27,8 +27,10 @@ console.log('[VYAAS] API_BASE_URL =', API_BASE_URL);
 export const API_ENDPOINTS = {
   // Auth
   sendOtp: '/api/auth/otp',
+  checkPhone: '/api/auth/check-phone',
   verifyOtp: '/api/auth/verify',
   register: '/api/auth/register',
+  getProfile: '/api/auth/profile', // will append /farmer_id
   
   // Farm
   saveFarm: '/api/farm/save',
@@ -36,6 +38,7 @@ export const API_ENDPOINTS = {
   
   // ML/Recommendations
   getRecommendations: '/api/ml/recommend',
+  getFeedbackHistory: '/api/ml/history', // will append /farmer_id
   
   // Market
   getMarketPrices: '/api/market/prices',
