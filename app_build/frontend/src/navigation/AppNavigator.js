@@ -21,6 +21,7 @@ import CultivationPlanScreen from '../screens/CultivationPlanScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import OTPVerificationScreen from '../screens/OTPVerificationScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import PastRecommendationsScreen from '../screens/PastRecommendationsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -119,6 +120,11 @@ const ProfileStackScreen = () => (
       component={FarmDetailsScreen}
       options={{ headerTitle: '🚜 Farm Details' }}
     />
+    <ProfileStack.Screen
+      name="PastRecommendations"
+      component={PastRecommendationsScreen}
+      options={{ headerTitle: '📜 Past Recommendations' }}
+    />
   </ProfileStack.Navigator>
 );
 
@@ -138,10 +144,15 @@ const FarmStackScreen = () => (
   </HomeStack.Navigator>
 );
 
-// Market Tab Stack - direct access to market prices
+// Market Tab Stack - includes recommendations and market insights
 const MarketStack = createNativeStackNavigator();
 const MarketStackScreen = () => (
   <MarketStack.Navigator screenOptions={screenOptions}>
+    <MarketStack.Screen
+      name="CropsMain"
+      component={RecommendationsScreen}
+      options={{ headerTitle: '🌾 Crop Recommendations' }}
+    />
     <MarketStack.Screen
       name="MarketMain"
       component={MarketInsightsScreen}
