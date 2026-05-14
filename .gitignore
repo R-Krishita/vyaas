@@ -81,6 +81,9 @@ credentials.json
 jwt_secret.txt
 api_keys.txt
 
+# Test Files
+test_files/
+
 # dataset
 generate_farmer_inputs.py
 remerge_crops.py
@@ -116,3 +119,5 @@ settings.json
 .agents/
 
 production_artifacts/
+
+codebase_analysis.txt
