@@ -8,25 +8,24 @@ router = APIRouter(prefix="/api/farm", tags=["Farm"])
 class FarmData(BaseModel):
     state: str = "Maharashtra"
     district: str = ""
-    farmSize: str = ""
+    farmSize: float = 0.0
     soilType: str = "Black"
-    soilPh: str = "6.5"
-    nitrogen: str = "0"
-    phosphorus: str = "0"
-    potassium: str = "0"
-    rainfall: str = "0"
-    temperature: str = "25`"
+    soilPh: float = 6.5
+    nitrogen: float = 0.0
+    phosphorus: float = 0.0
+    potassium: float = 0.0
+    rainfall: float = 0.0
+    temperature: float = 25.0
     waterSource: str = "Well"
     irrigationType: str = "Drip"
     season: str = "Kharif"
     previousCrop: str = ""
-    budget: str = "0"
-    # sunlightHours: str = "7"
-    # elevation: str = ""
-    humidity: str = ""
-    soilMoisture: str = "0"
-    organicCarbon: str = "0"
-    farm_id: str = "FARM_001" # Default for single user demo
+    budget: float = 0.0
+    humidity: float = 60.0
+    soilMoisture: float = 50.0
+    organicCarbon: float = 0.8
+    farm_id: str = "FARM_001" # Will be overridden by unique farmer-based ID
+    farmer_id: str = "ANON" # Required: farmer identity for ML engine
 
 @router.post("/save")
 async def save_farm(data: FarmData):
