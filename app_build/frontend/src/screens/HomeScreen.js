@@ -1,19 +1,22 @@
 // src/screens/HomeScreen.js
 // Main home screen with hero carousel and navigation cards
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import shared from '../styles/style';
 import ScreenWrapper from '../components/ScreenWrapper';
 import Card from '../components/Card';
 import SectionHeader from '../components/SectionHeader';
+import { authAPI } from '../services/api';
 
 const actionCards = [
   {
@@ -47,74 +50,107 @@ const actionCards = [
 ];
 
 const HomeScreen = ({ navigation }) => {
-  const farmerName = 'Farmer'; // Would come from auth/storage
+  const [farmer, setFarmer] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const farmerId = await AsyncStorage.getItem('farmer_id');
+        if (farmerId) {
+          const data = await authAPI.getProfile(farmerId);
+          setFarmer(data);
+        }
+      } catch (error) {
+        console.error('Error fetching profile for home:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Re-fetch when the screen comes into focus
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchProfile();
+    });
+
+    fetchProfile();
+    return unsubscribe;
+  }, [navigation]);
 
   const handleCardPress = (screen) => {
     if (screen === 'Recommendations') {
-      // Navigate to Crops tab
       navigation.navigate('Crops');
     } else {
       navigation.navigate(screen);
     }
   };
 
-
+  const profileName = farmer?.name ? farmer.name.split(' ')[0] : 'Farmer';
+  const farmSize = farmer?.total_farm_size_acres ? `${farmer.total_farm_size_acres}` : '--';
+  const currentCrop = farmer?.current_crop || 'None';
+  const location = farmer?.district || 'Unknown';
 
   return (
     <ScreenWrapper style={styles.container}>
-      <ScrollView 
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>🙏 Hello,</Text>
-            <Text style={styles.farmerName}>{farmerName}!</Text>
-          </View>
-          <TouchableOpacity 
-            style={styles.profileButton}
-            onPress={() => navigation.navigate('Profile')}
-          >
-            <Text style={styles.profileIcon}>👤</Text>
-          </TouchableOpacity>
+      {loading && !farmer ? (
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
-
-        {/* Action Cards */}
-        <SectionHeader title="What would you like to do?" />
-        <View style={styles.cardsGrid}>
-          {actionCards.map((card) => (
-            <Card
-              key={card.id}
-              style={styles.card}
-              onPress={() => handleCardPress(card.screen)}
+      ) : (
+        <ScrollView 
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.greeting}>🙏 Hello,</Text>
+              <Text style={styles.farmerName}>{profileName}!</Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.profileButton}
+              onPress={() => navigation.navigate('Profile')}
             >
-              <Text style={styles.cardIcon}>{card.icon}</Text>
-              <Text style={styles.cardTitle}>{card.title}</Text>
-              <Text style={styles.cardSubtitle}>{card.subtitle}</Text>
-            </Card>
-          ))}
-        </View>
+              <Text style={styles.profileIcon}>👤</Text>
+            </TouchableOpacity>
+          </View>
 
-        {/* Quick Stats */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>2.5</Text>
-            <Text style={styles.statLabel}>Acres</Text>
+          {/* Action Cards */}
+          <SectionHeader title="What would you like to do?" />
+          <View style={styles.cardsGrid}>
+            {actionCards.map((card) => (
+              <Card
+                key={card.id}
+                style={styles.card}
+                onPress={() => handleCardPress(card.screen)}
+              >
+                <Text style={styles.cardIcon}>{card.icon}</Text>
+                <Text style={styles.cardTitle}>{card.title}</Text>
+                <Text style={styles.cardSubtitle}>{card.subtitle}</Text>
+              </Card>
+            ))}
           </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>Tulsi</Text>
-            <Text style={styles.statLabel}>Current Crop</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>₹45K</Text>
-            <Text style={styles.statLabel}>Est. Profit</Text>
-          </View>
-        </View>
-      </ScrollView>
 
+          {/* Real Farm Stats instead of fake data */}
+          <SectionHeader title="Your Farm Snapshot" />
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue} numberOfLines={1}>{farmSize}</Text>
+              <Text style={styles.statLabel}>Acres</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue} numberOfLines={1}>{currentCrop}</Text>
+              <Text style={styles.statLabel}>Current Crop</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue} numberOfLines={1}>{location}</Text>
+              <Text style={styles.statLabel}>Location</Text>
+            </View>
+          </View>
+        </ScrollView>
+      )}
     </ScreenWrapper>
   );
 };
@@ -152,7 +188,6 @@ const styles = StyleSheet.create({
   profileIcon: {
     fontSize: 24,
   },
-  sectionTitle: shared.sectionTitle,
   cardsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

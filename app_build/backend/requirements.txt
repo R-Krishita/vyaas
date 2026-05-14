@@ -9,3 +9,6 @@ scikit-learn==1.7.2
 pandas
 joblib
 twilio
+mysql-connector-python>=8.0.0
+cachetools>=5.3.0
+APScheduler>=3.10.0

@@ -16,7 +16,8 @@ import {
 import { LineChart } from 'react-native-chart-kit';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import shared from '../styles/style';
-import { marketAPI, recommendAPI } from '../services/api';
+import { marketAPI, mlAPI } from '../services/api';
+import { feedbackAPI } from '../services/api';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -33,18 +34,26 @@ const MarketInsightsScreen = ({ route, navigation }) => {
   const [chartWidth, setChartWidth] = useState(300);
   const [farmDistrict, setFarmDistrict] = useState(null);
   const [farmState, setFarmState] = useState(null);
+  const [farmerId, setFarmerId] = useState(null);
+  const [farmId, setFarmId] = useState(null);
+  const [feedbackSent, setFeedbackSent] = useState(false);
 
   useFocusEffect(
     React.useCallback(() => {
       let isActive = true;
       const loadPersistedData = async () => {
         // Load farm location for local mandi pricing
-        const [savedDistrict, savedState] = await Promise.all([
+        const [savedDistrict, savedState, savedFarmerId, savedFarmId] = await Promise.all([
           AsyncStorage.getItem('farm_district').catch(() => null),
           AsyncStorage.getItem('farm_state').catch(() => null),
+          AsyncStorage.getItem('farmer_id').catch(() => null),
+          AsyncStorage.getItem('farm_id').catch(() => null),
         ]);
         if (isActive && savedDistrict) setFarmDistrict(savedDistrict);
         if (isActive && savedState) setFarmState(savedState);
+        if (isActive && savedFarmerId) setFarmerId(savedFarmerId);
+        if (isActive && savedFarmId) setFarmId(savedFarmId);
+        if (isActive) setFeedbackSent(false); // reset on screen focus
 
         if (route?.params?.allCrops && route.params.allCrops.length > 0) {
           if (isActive) {
@@ -86,7 +95,7 @@ const MarketInsightsScreen = ({ route, navigation }) => {
       // 1. Fetch details for all crops
       let detailsRes = null;
       try {
-        detailsRes = await recommendAPI.getCropDetails(allRecommendedCrops);
+        detailsRes = await mlAPI.getCropDetails(allRecommendedCrops);
       } catch (e) {
         console.error('Error fetching crop details:', e);
       }
@@ -327,6 +336,66 @@ const MarketInsightsScreen = ({ route, navigation }) => {
             ) : (
               <Text style={styles.noDataText}>No mandi data available for this region</Text>
             )}
+
+            {/* Last updated badge */}
+            {currentSelection.mandi_data?.last_updated && (
+              <Text style={styles.lastUpdatedText}>
+                🕐 Prices last updated: {new Date(currentSelection.mandi_data.last_updated).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </Text>
+            )}
+
+            {/* Crop Selection and Confirmation Section */}
+            <View style={styles.growSection}>
+              <Text style={styles.growTitle}>✅ I will grow</Text>
+              
+              {/* Crop Selection Buttons */}
+              <View style={styles.cropButtonsContainer}>
+                {allRecommendedCrops.map((cropName, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.cropSelectionButton,
+                      selectedCrop === cropName && styles.cropSelectionButtonActive
+                    ]}
+                    onPress={() => setSelectedCrop(cropName)}
+                  >
+                    <Text style={[
+                      styles.cropSelectionButtonText,
+                      selectedCrop === cropName && styles.cropSelectionButtonTextActive
+                    ]}>
+                      {selectedCrop === cropName ? '✓' : ''} {cropName}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Confirm Button */}
+              {!feedbackSent ? (
+                <TouchableOpacity
+                  style={styles.confirmButton}
+                  onPress={async () => {
+                    try {
+                      await feedbackAPI.submitChoice(
+                        farmerId || 'ANON',
+                        farmId || 'FARM_001',
+                        allRecommendedCrops,
+                        selectedCrop,
+                      );
+                      setFeedbackSent(true);
+                    } catch (e) {
+                      console.log('[VYAAS] Feedback error (non-critical):', e);
+                      setFeedbackSent(true);
+                    }
+                  }}
+                >
+                  <Text style={styles.confirmButtonText}>Confirm Choice</Text>
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.feedbackConfirmed}>
+                  <Text style={styles.feedbackConfirmedText}>🎉 Noted! Best of luck with {selectedCrop}.</Text>
+                </View>
+              )}
+            </View>
           </View>
         )}
       </ScrollView>
@@ -451,6 +520,76 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: SPACING.xxl,
     lineHeight: 24,
+  },
+  feedbackConfirmed: {
+    backgroundColor: '#E8F5E9',
+    borderRadius: RADIUS.md,
+    padding: SPACING.lg,
+    alignItems: 'center',
+    marginTop: SPACING.lg,
+    marginBottom: SPACING.xl,
+  },
+  feedbackConfirmedText: {
+    color: COLORS.primary,
+    fontWeight: '600',
+    fontSize: FONTS.sizes.md,
+  },
+  growSection: {
+    marginTop: SPACING.xl,
+    marginBottom: SPACING.xl,
+  },
+  growTitle: {
+    fontSize: FONTS.sizes.lg,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+    marginBottom: SPACING.lg,
+    textAlign: 'center',
+  },
+  cropButtonsContainer: {
+    flexDirection: 'column',
+    gap: SPACING.md,
+    marginBottom: SPACING.lg,
+  },
+  cropSelectionButton: {
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.md,
+    borderRadius: RADIUS.md,
+    borderWidth: 2,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
+    alignItems: 'center',
+    ...SHADOWS.sm,
+  },
+  cropSelectionButtonActive: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primary,
+  },
+  cropSelectionButtonText: {
+    fontSize: FONTS.sizes.md,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
+  cropSelectionButtonTextActive: {
+    color: '#ffffff',
+  },
+  confirmButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: RADIUS.md,
+    paddingVertical: SPACING.lg,
+    alignItems: 'center',
+    ...SHADOWS.sm,
+  },
+  confirmButtonText: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: FONTS.sizes.md,
+  },
+  lastUpdatedText: {
+    fontSize: 10,
+    color: COLORS.textMuted,
+    textAlign: 'center',
+    marginTop: SPACING.sm,
+    fontStyle: 'italic',
   },
   inputButton: {
     ...shared.primaryButton,

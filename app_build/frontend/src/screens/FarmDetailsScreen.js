@@ -218,13 +218,21 @@ const FarmDetailsScreen = ({ navigation }) => {
   };
 
   const handleSubmit = async () => {
-    const farm_id = 'FARM_001';
     try {
-      const farmer_id = await AsyncStorage.getItem('farmer_id') || 'ANON';
+      const farmer_id = await AsyncStorage.getItem('farmer_id');
+      
+      // ✅ FIX: Generate unique farm_id per farmer instead of hardcoding
+      // Format: FARM_{farmer_id}_{timestamp} ensures uniqueness per farmer per session
+      let farm_id = 'FARM_001'; // Fallback for anonymous users
+      if (farmer_id && farmer_id !== 'ANON') {
+        const timestamp = Date.now();
+        farm_id = `FARM_${farmer_id.substring(0, 8)}_${timestamp}`;
+      }
+      
       const payload = {
         ...formData,
         farm_id,
-        farmer_id,
+        farmer_id: farmer_id || 'ANON',
         // Normalise key names to match backend expectations
         farmSize: formData.totalFarmSizeAcres,
         total_farm_size_acres: formData.totalFarmSizeAcres,
@@ -240,11 +248,16 @@ const FarmDetailsScreen = ({ navigation }) => {
         await AsyncStorage.setItem('farm_state', formData.state);
       // Store farm_id for feedback calls in MarketInsightsScreen
       await AsyncStorage.setItem('farm_id', farm_id);
-      console.log('[VYAAS] Farm details saved, navigating to Recommendations');
+      console.log('[VYAAS] Farm details saved with farm_id:', farm_id, 'farmer_id:', farmer_id);
       navigation.navigate('Recommendations', { farm_id, farmData: payload });
     } catch (error) {
       console.warn('[VYAAS] Could not save farm details:', error?.message);
-      navigation.navigate('Recommendations', { farm_id, farmData: formData });
+      // Fallback: still navigate with form data even if save fails
+      const farmer_id = await AsyncStorage.getItem('farmer_id') || 'ANON';
+      const fallback_farm_id = farmer_id && farmer_id !== 'ANON' 
+        ? `FARM_${farmer_id.substring(0, 8)}_${Date.now()}`
+        : 'FARM_001';
+      navigation.navigate('Recommendations', { farm_id: fallback_farm_id, farmData: formData });
     }
   };
 

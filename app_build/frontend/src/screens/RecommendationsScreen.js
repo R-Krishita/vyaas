@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import shared from '../styles/style';
-import { recommendAPI } from '../services/api';
+import { mlAPI } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Demo recommendations (used when API fails)
@@ -73,13 +73,25 @@ const RecommendationsScreen = ({ navigation, route }) => {
   const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
-    fetchRecommendations();
-  }, []);
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchRecommendations();
+    });
+
+    fetchRecommendations(); // Initial fetch
+    
+    return unsubscribe;
+  }, [navigation, route.params?.farm_id]);
 
   const fetchRecommendations = async () => {
-    const farm_id = route?.params?.farm_id || 'FARM_001';
+    // ✅ FIX: Check route params first, then AsyncStorage, then fallback to FARM_001
+    let farm_id = route?.params?.farm_id;
+    if (!farm_id) {
+      farm_id = await AsyncStorage.getItem('farm_id');
+    }
+    farm_id = farm_id || 'FARM_001';
+    
     try {
-      const response = await recommendAPI.getCropRecommendations(farm_id);
+      const response = await mlAPI.getRecommendations(farm_id);
       const recs = response.recommendations || [];
       if (recs.length > 0) {
         setRecommendations(recs);
@@ -205,7 +217,7 @@ const RecommendationsScreen = ({ navigation, route }) => {
             )}
 
             {/* Reasons */}
-            <View style={styles.reasonsSection}>
+            {/* <View style={styles.reasonsSection}>
               <Text style={styles.reasonsTitle}>Why this crop?</Text>
               {crop.reasons.map((reason, i) => (
                 <View key={i} style={styles.reasonRow}>
@@ -213,7 +225,7 @@ const RecommendationsScreen = ({ navigation, route }) => {
                   <Text style={styles.reasonText}>{reason}</Text>
                 </View>
               ))}
-            </View>
+            </View>*/}
 
             {/* Action Buttons */}
             <View style={styles.buttonRow}>
@@ -221,7 +233,7 @@ const RecommendationsScreen = ({ navigation, route }) => {
                 style={styles.marketButton}
                 onPress={() => handleViewMarket(crop)}
               >
-                <Text style={styles.marketButtonText}>📊 View Market Comparison</Text>
+                <Text style={styles.marketButtonText}>📊 Market Comparison</Text>
               </TouchableOpacity>
             </View>
           </View>

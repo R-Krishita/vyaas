@@ -1,7 +1,7 @@
 // src/screens/ProfileScreen.js
-// User profile with farm info and settings
+// User profile with dynamic farmer info and settings
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,34 +9,80 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
+  ActivityIndicator,
+  Alert
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import shared from '../styles/style';
+import { authAPI } from '../services/api';
 
 const ProfileScreen = ({ navigation }) => {
-  const farmer = {
-    name: 'Rajesh Patil',
-    phone: '9876543210',
-    farmSize: '2.5 acres',
-    location: 'Pune, Maharashtra',
-    currentCrop: 'Tulsi',
-    lastRecommendation: 'Nov 15, 2024',
+  const [farmer, setFarmer] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const farmerId = await AsyncStorage.getItem('farmer_id');
+      if (farmerId) {
+        const data = await authAPI.getProfile(farmerId);
+        setFarmer(data);
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const menuItems = [
-    { icon: '🚜', title: 'My Farm Details', subtitle: farmer.location, screen: 'FarmDetails' },
-    { icon: '📜', title: 'Past Recommendations', subtitle: `Last: ${farmer.lastRecommendation}`, screen: 'Recommendations' },
-    { icon: '🌐', title: 'Change Language', subtitle: 'English', screen: null },
-    { icon: '📞', title: 'Help & Support', subtitle: '1800-XXX-XXXX', screen: null },
-    { icon: 'ℹ️', title: 'About App', subtitle: 'Version 1.0.0', screen: null },
-  ];
+  const handleHelpSupport = () => {
+    Alert.alert(
+      "Help & Support",
+      "Need assistance? Contact us at:\n\n📞 Phone: 1800-123-4567\n📧 Email: support@vyaas.in"
+    );
+  };
 
-  const handleLogout = () => {
+  const handleAboutApp = () => {
+    Alert.alert(
+      "About Vyaas",
+      "Vyaas is an AI-powered Smart Ayurvedic Crop Advisor. We empower farmers by recommending high-value medicinal and Ayurvedic crops suited for their land. By integrating real-time market prices, climate data, and soil conditions, Vyaas helps you maximize profits and promote sustainable farming."
+    );
+  };
+
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem('farmer_id');
     navigation.reset({
       index: 0,
       routes: [{ name: 'Splash' }],
     });
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  // Fallback data if no user is logged in
+  const profileName = farmer?.name || 'Guest User';
+  const profilePhone = farmer?.phone || 'Not Registered';
+  const farmSize = farmer?.total_farm_size_acres ? `${farmer.total_farm_size_acres} acres` : 'N/A';
+  const currentCrop = farmer?.current_crop || 'None';
+  const district = farmer?.district || 'Unknown';
+  const state = farmer?.state || 'Unknown';
+
+  const menuItems = [
+    { icon: '🚜', title: 'My Farm Details', subtitle: `${district}, ${state}`, action: () => navigation.navigate('FarmDetails') },
+    { icon: '📜', title: 'Past Recommendations', subtitle: 'View history', action: () => navigation.navigate('PastRecommendations') },
+    { icon: '📞', title: 'Help & Support', subtitle: '1800-123-4567', action: handleHelpSupport },
+    { icon: 'ℹ️', title: 'About App', subtitle: 'Version 1.0.0', action: handleAboutApp },
+  ];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -46,24 +92,24 @@ const ProfileScreen = ({ navigation }) => {
           <View style={styles.avatarContainer}>
             <Text style={styles.avatar}>👨‍🌾</Text>
           </View>
-          <Text style={styles.farmerName}>{farmer.name}</Text>
-          <Text style={styles.farmerPhone}>📞 {farmer.phone}</Text>
+          <Text style={styles.farmerName}>{profileName}</Text>
+          <Text style={styles.farmerPhone}>📞 {profilePhone}</Text>
         </View>
 
         {/* Farm Stats */}
         <View style={styles.statsCard}>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>{farmer.farmSize}</Text>
+            <Text style={styles.statValue}>{farmSize}</Text>
             <Text style={styles.statLabel}>Farm Size</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>{farmer.currentCrop}</Text>
+            <Text style={styles.statValue}>{currentCrop}</Text>
             <Text style={styles.statLabel}>Current Crop</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>Pune</Text>
+            <Text style={styles.statValue}>{district}</Text>
             <Text style={styles.statLabel}>District</Text>
           </View>
         </View>
@@ -73,7 +119,7 @@ const ProfileScreen = ({ navigation }) => {
           <TouchableOpacity
             key={index}
             style={styles.menuItem}
-            onPress={() => item.screen && navigation.navigate(item.screen)}
+            onPress={item.action}
           >
             <Text style={styles.menuIcon}>{item.icon}</Text>
             <View style={styles.menuContent}>

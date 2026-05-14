@@ -1,71 +1,100 @@
 # app/main.py
-# Smart Ayurvedic Crop Advisor - FastAPI Backend
-# Main application entry point with real Mandi API integration
+# Smart Ayurvedic Crop Advisor — FastAPI entry point
+# Startup: DB init → stale cache check → APScheduler (6:30 AM IST daily)
+
+import sys
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.routers import market_router, farm_router, ml_router
 from app.routers.auth import router as auth_router
 from app.config import get_settings
-from app.services.mandi_service import MandiService
+from app.database import init_db
 
-# ─── Background Cache Worker ──────────────────────────────────────────────────
-async def background_price_fetcher():
-    """Proactively refreshes the mandi price cache every 12 hours.
-    Runs immediately on server startup so the cache is always warm.
-    """
-    settings = get_settings()
-    from app.routers.market import _mandi_service_instance, get_mandi_service
-    mandi_service = get_mandi_service(settings)  # returns or creates singleton
-    all_crops = settings.supported_crops
 
-    while True:
-        print(f"[CACHE] Refreshing mandi prices for {len(all_crops)} crops in background...")
-        await mandi_service.refresh_cache_for_crops(all_crops)
-        print(f"[CACHE] ✅ Background refresh complete. Next refresh in 12 hours.")
-        await asyncio.sleep(12 * 60 * 60)  # 12 hours
-
+# ── Lifespan ──────────────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """App lifespan: starts background price fetcher on startup."""
-    asyncio.create_task(background_price_fetcher())
-    yield  # App is running
-    # (cleanup on shutdown can go here if needed)
-# ─────────────────────────────────────────────────────────────────────────────
+    # 1. Initialise MySQL DB + create tables
+    try:
+        init_db()
+    except Exception as e:
+        print(f"[STARTUP] ⚠️  DB init failed: {e} — running in limited mode.")
 
-# Initialize FastAPI app
+    # 2. Start APScheduler for daily mandi refresh (6:30 AM IST)
+    try:
+        from apscheduler.schedulers.asyncio import AsyncIOScheduler
+        from apscheduler.triggers.cron import CronTrigger
+        from app.routers.market import get_mandi_service
+
+        settings = get_settings()
+        mandi_service = get_mandi_service(settings)
+
+        async def scheduled_mandi_refresh():
+            print("[SCHEDULER] ⏰ 6:30 AM IST — Starting daily mandi price refresh...")
+            await mandi_service.refresh_all_crops()
+
+        scheduler = AsyncIOScheduler(timezone="Asia/Kolkata")
+        scheduler.add_job(
+            scheduled_mandi_refresh,
+            CronTrigger(hour=6, minute=30, timezone="Asia/Kolkata"),
+            id="daily_mandi_refresh",
+            replace_existing=True,
+        )
+        scheduler.start()
+        print("[SCHEDULER] ✅ APScheduler started — daily mandi refresh at 6:30 AM IST")
+
+        # 3. Startup lazy check — refresh immediately if prices are stale (> 24 hrs)
+        if mandi_service.is_cache_stale():
+            print("[STARTUP] 🔄 Mandi prices are stale — refreshing now in background...")
+            asyncio.create_task(mandi_service.refresh_all_crops())
+        else:
+            print("[STARTUP] ✅ Mandi prices are fresh — no startup refresh needed.")
+
+    except ImportError:
+        print("[STARTUP] ⚠️  APScheduler not installed. Run: pip install APScheduler")
+    except Exception as e:
+        print(f"[STARTUP] ⚠️  Scheduler error: {e}")
+
+    yield  # App is running
+    # Shutdown cleanup if needed
+
+
+# ── App initialisation ────────────────────────────────────────────────────────
 app = FastAPI(
     lifespan=lifespan,
     title="Smart Ayurvedic Crop Advisor API",
     description="""
-    🌿 Backend API for the Smart Ayurvedic Crop Advisor mobile app.
-    
+    🌿 Backend API for the Vyaas Smart Ayurvedic Crop Advisor mobile app.
+
     ## Features
-    - **Real-time Mandi Prices**: Live market prices from data.gov.in (Agmarknet)
-    - **Ayurvedic Crop Focus**: Tulsi, Ashwagandha, Turmeric, and more
-    - **Best Mandi Finder**: Find where to sell at best prices
-    - **Price History**: Trend analysis for informed decisions
-    
+    - **ML Crop Recommendations** — RandomForest model with farm-specific inputs
+    - **Real-time Mandi Prices** — data.gov.in Agmarknet, refreshed daily at 6:30 AM IST
+    - **Price History & Harvest Prediction** — Linear regression from accumulated daily prices
+    - **Farmer Feedback Loop** — Explicit crop selection feeds weekly model retraining
+    - **MySQL Persistence** — All data survives server restarts
+
     ## Data Source
-    Prices fetched from Government of India's Agmarknet database via data.gov.in API.
+    Prices from Government of India's Agmarknet database via data.gov.in API.
     """,
-    version="1.0.0",
+    version="2.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
 
-# CORS middleware for mobile app access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure for production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers
 app.include_router(market_router)
 app.include_router(farm_router.router)
 app.include_router(ml_router.router)
@@ -74,33 +103,35 @@ app.include_router(auth_router)
 
 @app.get("/")
 async def root():
-    """Root endpoint with API info."""
     return {
         "app": "Smart Ayurvedic Crop Advisor",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "status": "running",
         "docs": "/docs",
         "endpoints": {
-            "market_prices": "/api/market/prices?crop=tulsi",
-            "price_history": "/api/market/prices/history?crop=turmeric",
-            "best_mandis": "/api/market/best-mandis?crop=ashwagandha",
-            "supported_crops": "/api/market/supported-crops"
-        }
+            "ml_recommend":    "POST /api/ml/recommend",
+            "ml_feedback":     "POST /api/ml/feedback",
+            "crop_details":    "GET  /api/ml/crop-details?crop=Tulsi,Ashwagandha",
+            "market_prices":   "GET  /api/market/prices?crop=tulsi",
+            "price_history":   "GET  /api/market/prices/history?crop=turmeric",
+            "harvest_predict": "GET  /api/market/predict-harvest?crop=tulsi&growth_days=90&current_price=150",
+            "best_mandis":     "GET  /api/market/best-mandis?crop=ashwagandha",
+        },
     }
 
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
     settings = get_settings()
     return {
         "status": "healthy",
-        "api_key_configured": bool(settings.data_gov_api_key and settings.data_gov_api_key != "your_api_key_here"),
-        "data_source": "data.gov.in"
+        "version": "2.0.0",
+        "api_key_configured": bool(
+            settings.data_gov_api_key and settings.data_gov_api_key != "your_api_key_here"
+        ),
+        "data_source": "data.gov.in",
+        "database": "MySQL via XAMPP",
     }
-
-
-
 
 
 if __name__ == "__main__":
