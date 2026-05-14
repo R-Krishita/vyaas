@@ -1,6 +1,10 @@
 # 🌿 Vyaas — Smart Ayurvedic Crop Advisor
 
-**Vyaas** is an AI-powered agricultural platform that helps Indian farmers choose the best ayurvedic crops for their land. It combines a **machine learning engine** trained on 60+ crops with **real-time market prices** and **AI-powered chat assistance** to deliver personalized recommendations — with a special focus on high-value Ayurvedic crops like Tulsi, Ashwagandha, and Turmeric.
+> 🚀 **An AI-powered platform helping Indian farmers cultivate high-value Ayurvedic crops with data-driven decisions.**
+
+**Vyaas** helps farmers choose the best ayurvedic crops for their land using ML recommendations, real-time market prices, and AI chat assistance. We combine a **Random Forest model trained on 60+ crops**, **live Agmarknet price data**, and **Google Gemini AI** to deliver personalized crop recommendations focused on high-value crops like Tulsi, Ashwagandha, and Turmeric.
+
+**Quick Links:** 📖 [Getting Started](../GETTING_STARTED.md) | 🏗️ [Architecture](../ARCHITECTURE.md) | 💬 [Troubleshooting](#-troubleshooting) | ❓ [FAQ](#-faqs)
 
 ---
 
@@ -134,7 +138,44 @@ Make sure you have the following installed before proceeding:
 
 ---
 
-## 🚀 Getting Started
+## ⚡ Key Features
+
+- 🌱 **Smart Crop Recommendations** — ML model suggests optimal crops based on farm soil, climate, and economics
+- 💰 **Real-Time Market Prices** — Live price data from Agmarknet updated daily
+- 💬 **AI-Powered Chatbot** — Gemini AI answers farmer queries in multiple languages
+- 📊 **Market Insights** — Price trends, harvest timing, and economic analysis
+- 🔐 **Secure OTP Authentication** — Phone-based login without passwords
+- 📱 **Mobile-First Design** — Works on any Android/iOS device via Expo
+- 🌍 **Multi-Language Support** — Hindi, English, and regional languages
+
+---
+
+## 🚀 Quick Start (5 minutes)
+
+```bash
+# 1. Clone repo
+git clone https://github.com/R-Krishita/vyaas.git
+cd vyaas
+
+# 2. Start Backend (requires Python 3.9+)
+cd app_build/backend
+python -m venv .venv
+# Windows: .\.venv\Scripts\activate | macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+python -m uvicorn app.main:app --reload --port 8000
+
+# 3. Start Frontend (in another terminal, requires Node 18+)
+cd app_build/frontend
+npm install
+npx expo start
+# Scan QR code with Expo Go app or press 'w' for web
+```
+
+> **First time?** See [Getting Started Guide](../GETTING_STARTED.md) for detailed step-by-step instructions.
+
+---
+
+## 🚀 Full Setup (Following Guide)
 
 ### 1. Clone the Repository
 
@@ -152,7 +193,7 @@ The backend is a **FastAPI** server that serves the ML model, market prices.
 #### a) Create & activate a virtual environment
 
 ```bash
-cd backend
+cd app_build/backend
 
 # Create virtual environment
 python -m venv .venv
@@ -189,9 +230,9 @@ GEMINI_API_KEY=your_key_here
 ```
 
 #### d) Start the backend server
-
+after starting the virtual python environment run this command
 ```bash
-uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --reload --port 8000
 ```
 
 The API will be available at **http://localhost:8000**. Visit http://localhost:8000/docs for the interactive Swagger UI.
@@ -205,7 +246,7 @@ The mobile app is built with **React Native** using **Expo**.
 #### a) Install dependencies
 
 ```bash
-cd mobile-app
+cd app_build/frontend
 npm install
 ```
 
@@ -282,6 +323,51 @@ npm run dev
 
 ---
 
+---
+
+## ❓ FAQs
+
+**Q: Can I run the backend on Windows?**
+A: Yes! Use Python's venv module. For activation, use `.\.venv\Scripts\activate` (PowerShell) or `.\.venv\Scripts\activate.bat` (CMD).
+
+**Q: Why does the mobile app show "Connection refused" error?**
+A: Update the API base URL in `frontend/src/constants/api.js` to your machine's local IP (e.g., `http://192.168.1.5:8000`). Don't use `localhost` — the phone can't reach it.
+
+**Q: How do I get API keys?**
+A: 
+- **Data.gov (Agmarknet)**: Sign up at [data.gov.in](https://data.gov.in/), create an app, copy your API key
+- **Google Gemini**: Get free key at [AI Studio](https://aistudio.google.com/app/apikey)
+
+**Q: What if I get "ModuleNotFoundError: No module named 'fastapi'"?**
+A: Make sure you activated the Python virtual environment before running `pip install -r requirements.txt`.
+
+**Q: Does the app work offline?**
+A: No. It needs internet for Agmarknet prices, Gemini AI chat, and OTP verification. Recommendations can work with cached data.
+
+**Q: How often is the ML model retrained?**
+A: Currently, it's retrained manually in the dataset/ folder. Automated retraining is on the roadmap.
+
+**Q: Can I deploy this to production?**
+A: Backend can deploy to Heroku/Railway. Frontend deploys via Expo Application Services (EAS). See deployment guides in documentation.md.
+
+---
+
+## 🛠️ Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| **Port 8000 already in use** | Change to another port: `python -m uvicorn app.main:app --port 8001` |
+| **npm install fails** | Clear cache: `npm cache clean --force && npm install` |
+| **API shows 422 Unprocessable Entity** | Check .env file has all required keys: `DATA_GOV_API_KEY`, `GEMINI_API_KEY` |
+| **OTP never arrives** | Verify Twilio credentials in .env; check phone number format (must be +91XXXXXXXXXX) |
+| **Backend starts but API unreachable from phone** | Phone and PC must be on same WiFi; update API URL to PC's local IP, not localhost |
+| **Frontend screen is blank** | Check browser console (web) or Expo logs for errors; restart with `npx expo start --clear` |
+| **Dataset is too large to process** | Generate fewer rows in `dataset/generate_farmer_inputs.py` (adjust `num_rows` parameter) |
+
+📖 **Need help?** Check [Getting Started Guide](../GETTING_STARTED.md#-troubleshooting-common-issues) for more detailed troubleshooting steps.
+
+---
+
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -290,8 +376,35 @@ npm run dev
 4. Push to the branch (`git push origin feature/my-feature`)
 5. Open a Pull Request
 
+**Code Style:** Follow PEP 8 (Python), Prettier (JavaScript). Add tests for new features.
+
+---
+
+## 📚 Documentation
+
+| Document | Purpose |
+|----------|---------|
+| [GETTING_STARTED.md](../GETTING_STARTED.md) | Step-by-step setup guide for all components |
+| [ARCHITECTURE.md](../ARCHITECTURE.md) | System design, data flows, authentication, database schema |
+| [documentation.md](./documentation.md) | Detailed internal architecture and API reference |
+| [backend/README.md](./backend/README.md) | Backend-specific setup and API endpoints |
+| [dataset/README.md](./dataset/README.md) | ML model training and data pipeline |
+
+---
+
+## 📞 Support & Contact
+
+- **Issues?** Open a GitHub issue or check Troubleshooting above
+- **Questions?** See FAQ section
+- **Contributions?** Pull requests welcome! See Contributing guidelines
+- **Maintainers:** Check the GitHub repository for contact info
+
 ---
 
 ## 📄 License
 
 This project is developed as an academic/research initiative. Please contact the maintainers for licensing details.
+
+---
+
+**Last Updated:** May 2024 | Built with ❤️ for Indian farmers

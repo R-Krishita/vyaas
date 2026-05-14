@@ -101,6 +101,29 @@ GEMINI_API_KEY=your_gemini_api_key_here
 { "success": true, "message": "OTP sent", "phone": "+919876543210" }
 ```
 
+**POST /api/auth/verify**
+
+```json
+// Request
+{ "phone": "+919876543210", "otp": "123456" }
+
+// Response (Registered Farmer)
+{ 
+  "success": true, 
+  "token": "...", 
+  "farmer_id": "abc-123-uuid", 
+  "registered": true 
+}
+
+// Response (New Farmer)
+{ 
+  "success": true, 
+  "token": "...", 
+  "farmer_id": "", 
+  "registered": false 
+}
+```
+
 ---
 
 ### 🚜 Farm Management
